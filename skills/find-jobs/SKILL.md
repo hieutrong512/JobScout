@@ -24,7 +24,8 @@ Dùng `<run-id>` = ngày hiện tại (YYYY-MM-DD). Tạo `data/profiles`, `data
 ## Bước 2 — Collect → data/jobs/<run-id>.json
 Spawn subagent **`job-collector`** (context riêng, tốn nhiều lượt search/fetch).
 - Truyền đường dẫn `profile.json` và output `data/jobs/<run-id>.json`.
-- **Chỉ giữ job xem được full JD VÀ còn hạn** (bỏ snippet-only, 404/410, hết hạn). Tối đa 20 job hợp lệ.
+- Tìm kiếm từ các Job Board (ITviec, TopCV, VietnamWorks, LinkedIn...) và các **Hội nhóm Facebook công khai** (Vietnam AI Community, J2TEAM, Tuyển Dụng IT...).
+- Giữ job thỏa mãn tiêu chuẩn: Job board cần full JD; Facebook post chỉ cần Title + Vị trí/Tech stack + Kênh liên hệ/Link bài viết. Tối đa 20 job hợp lệ.
 
 ## Bước 3 — Match → data/results/<run-id>.shortlist.json
 Spawn subagent **`job-matcher`** (context riêng, chấm điểm bulk).

@@ -13,24 +13,27 @@ không cần API key. `web_search` phải được bật (codex --search hoặc 
 nếu không có, dừng và báo người dùng bật.
 
 QUY TRÌNH:
-1. Sinh query song ngữ (EN + VN) từ target.desired_roles, desired_level, locations, top skills.
-   Kèm site filter nguồn VN: site:itviec.com, site:topcv.vn, site:vietnamworks.com,
-   site:careerviet.vn, site:linkedin.com/jobs. Biến thể theo từng role và location.
-2. Search từng query, gom URL + snippet, khử trùng theo URL chuẩn hóa.
-3. BỘ LỌC CỨNG — chỉ giữ job thỏa CẢ HAI:
-   (a) Xem được full JD: mở URL lấy toàn bộ JD (không chỉ snippet). Không lấy được
-       (bị chặn, cần login, chỉ có snippet) → BỎ QUA. extraction_confidence phải ≥ 0.5.
-   (b) Còn hạn: bỏ nếu 404/410, "hết hạn/expired", "no longer accepting applications",
-       "không còn nhận đơn", deadline đã qua, hoặc redirect về trang danh sách chung.
-       Có ghi hạn nộp → điền application_deadline (YYYY-MM-DD), chỉ giữ khi ≥ ngày hiện tại.
+1. Sinh query song ngữ (EN + VN) từ target.desired_roles, desired_level, locations, top skills:
+   - Job boards VN: site:itviec.com, site:topcv.vn, site:vietnamworks.com, site:careerviet.vn, site:linkedin.com/jobs.
+   - Facebook Groups công khai: site:facebook.com/groups ("tuyển dụng" OR "hiring" OR "tìm đồng đội") "<role>" "<location>".
+     (Gợi ý group: Vietnam AI Community, Python Vietnam, J2TEAM Community, Tuyển dụng IT TP.HCM / Hà Nội, Tuyển dụng AI / Data Science...)
+2. Search từng query, gom URL + snippet / nội dung bài đăng, khử trùng theo URL chuẩn hóa.
+3. BỘ LỌC CỨNG (phân loại theo nguồn):
+   (a) Với Job boards truyền thống (ITviec, TopCV, VietnamWorks, LinkedIn):
+       - Phải xem được full JD và còn hạn (extraction_confidence ≥ 0.5; bỏ nếu 404/410, hết hạn, redirect).
+   (b) Với bài đăng Facebook Groups công khai:
+       - ĐẶC THÙ: HR thường đăng ngắn để câu tương tác (inbox/Zalo/comment lấy JD). KHÔNG bắt buộc có link JD ngoài.
+       - TIÊU CHUẨN GIỮ: Chỉ cần có [Title/Vị trí] + [Địa điểm/Remote] + [Link bài post hoặc kênh liên hệ (Zalo, Inbox, Email, Phone)].
+       - Bóc tách contact: email, zalo, telegram, profile người đăng, hoặc hướng dẫn "inbox/comment".
+       - Thời hạn: Ưu tiên bài đăng gần nhất (trong vòng 30 ngày). Bỏ nếu bài viết đã bị xóa / quá cũ.
    KHÔNG vượt anti-bot/CAPTCHA. Tôn trọng robots.txt/ToS.
 4. Chuẩn hóa theo skill `job-schema`; skills/location/lương theo skill `bilingual-normalization`.
-   Tạo `id` hash ổn định để khử trùng. Set extraction_confidence trung thực.
-5. Ghi mảng job hợp lệ vào `data/jobs/<run-id>.json`. Trả tóm tắt: số job theo nguồn,
-   số bị bỏ (chặn/hết hạn), cảnh báo dữ liệu thiếu.
+   Tạo `id` hash ổn định để khử trùng. Set extraction_confidence trung thực (0.5-0.7 cho bài post FB ngắn).
+5. Ghi mảng job hợp lệ vào `data/jobs/<run-id>.json`. Trả tóm tắt: số job theo nguồn (Job boards vs Facebook Groups),
+   số bị bỏ, cảnh báo dữ liệu thiếu.
 
 NGUYÊN TẮC:
-- Chỉ giữ job xem được full JD VÀ còn hạn. Thà ít mà chắc.
-- Không bịa trường; thiếu → unknown. `url` luôn có mặt và còn truy cập được.
-- Mục tiêu tối đa 20 job hợp lệ. Dư thì thôi; thiếu thì nêu lý do.
+- Job boards cần full JD; Facebook posts chỉ cần Title + Vị trí + Liên hệ/Link post.
+- Không bịa trường; thiếu → unknown. `url` luôn có mặt (link bài post hoặc link JD).
+- Mục tiêu tối đa 20 job hợp lệ (kết hợp cả nguồn web và Facebook). Dư thì thôi; thiếu thì nêu lý do.
 """

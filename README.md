@@ -50,13 +50,13 @@ Hoặc gọi từng phần bằng ngôn ngữ tự nhiên (skill/agent tự kíc
 CV + Target
    │  [1] candidate-intake (skill)   → data/profiles/<slug>.json
    ▼
-   │  [2] job-collector (agent)      → data/jobs/<run-id>.json   (web_search; chỉ job xem được full JD & còn hạn, tối đa 20)
+   │  [2] job-collector (agent)      → data/jobs/<run-id>.json   (web_search: Job boards & FB Public Groups, tối đa 20)
    ▼
    │  [3] job-matcher (agent)        → data/results/<run-id>.shortlist.json
    ▼
    │  [4] fit-analyzer (skill)       → data/results/<run-id>.fit_report.md
    ▼
-   [5] application-assistant (skill, tùy chọn) → CV bullets / cover letter
+   [5] application-assistant (skill, tùy chọn) → CV bullets / cover letter / tin nhắn tiếp cận HR (Zalo/FB)
 ```
 
 ## Cấu trúc plugin
@@ -67,11 +67,11 @@ CV + Target
 | `skills/find-jobs/` | Skill điều phối full pipeline (một-lệnh) |
 | `skills/candidate-intake/` | Parse CV + hỏi target → profile.json |
 | `skills/scoring-rubric/` | Công thức tính điểm khớp (nền tảng) |
-| `skills/job-schema/` | Cách điền `schemas/job.schema.json` |
-| `skills/bilingual-normalization/` | Chuẩn hóa skill/chức danh/lương Việt–Anh |
+| `skills/job-schema/` | Cách điền `schemas/job.schema.json` (kèm contact & FB posts) |
+| `skills/bilingual-normalization/` | Chuẩn hóa skill/chức danh/lương Việt–Anh & văn phong MXH |
 | `skills/fit-analyzer/` | Giải thích fit + gap → fit_report.md |
-| `skills/application-assistant/` | Tailor CV / cover letter (tùy chọn) |
-| `agents/job-collector.toml` | Subagent: search + scrape JD → jobs.json |
+| `skills/application-assistant/` | Tailor CV / cover letter / mẫu tin nhắn HR (Zalo/FB) |
+| `agents/job-collector.toml` | Subagent: search + scrape JD từ Web & FB Groups → jobs.json |
 | `agents/job-matcher.toml` | Subagent: chấm điểm & rank → shortlist.json |
 | `schemas/*.json` | Data contracts: profile / job / match |
 | `data/{profiles,jobs,results}/` | Dữ liệu chạy (gitignore dữ liệu nhạy cảm) |
@@ -83,6 +83,8 @@ skills 35% · seniority 20% · domain 15% · compensation 15% · location 5% · 
 
 ## Ghi chú vận hành
 
-- Chỉ thu thập job **xem được full JD và còn hạn ứng tuyển**; snippet-only / hết hạn / 404-410 bị bỏ.
+- **Tiêu chuẩn thu thập theo nguồn**:
+  - *Job boards truyền thống* (ITviec, TopCV, VietnamWorks, LinkedIn): Chỉ giữ job xem được full JD và còn hạn.
+  - *Hội nhóm Facebook công khai*: HR thường đăng teaser câu tương tác (inbox/Zalo/comment lấy JD), chỉ cần có **Title + Vị trí/Địa điểm + Kênh liên hệ/Link bài post** (không bắt buộc có link full JD ngoài).
 - Giữ nguyên đơn vị lương gốc theo JD; chỉ quy đổi khi so sánh (tỉ giá $1 = 26.100 VND).
-- Tôn trọng robots.txt/ToS; không vượt anti-bot/CAPTCHA; không tự nộp hồ sơ thay người dùng.
+- Tôn trọng robots.txt/ToS; không vượt anti-bot/CAPTCHA; không tự nộp hồ sơ / gửi tin nhắn thay người dùng.
