@@ -1,3 +1,8 @@
+---
+name: candidate-intake
+description: Parse CV của ứng viên (PDF/DOCX/text) và thu thập target/mong muốn để tạo profile.json chuẩn. Dùng khi bắt đầu một phiên tìm việc, khi người dùng cung cấp CV mới, hoặc muốn cập nhật mục tiêu nghề nghiệp.
+---
+
 # Candidate Intake — tạo profile ứng viên
 
 Đầu ra: một file `data/profiles/<slug>.json` tuân theo `schemas/profile.schema.json`.
@@ -13,7 +18,7 @@
 
 ## Bước 2 — Chuẩn hóa (song ngữ)
 
-- Áp `codex/reference/bilingual-normalization.md`: đưa skills & chức danh về canonical name, chuẩn hóa location.
+- Áp skill `bilingual-normalization`: đưa skills & chức danh về canonical name, chuẩn hóa location.
 - Với mỗi skill, cố gắng gắn `years`/`level`/`evidence` từ CV (không bịa — thiếu thì để trống).
 
 ## Bước 3 — Thu thập target
@@ -25,7 +30,7 @@ Hỏi ứng viên (gộp câu hỏi, đừng hỏi lẻ tẻ). Nếu người d�
 3. **Lương kỳ vọng** (min & target, VND hay USD, tháng/năm).
 4. **Ngành** ưu tiên + **quy mô công ty**.
 5. **Dealbreakers** — điều tuyệt đối không chấp nhận.
-6. **Ưu tiên** (priorities): cái gì quan trọng nhất? (lương / kỹ năng phù hợp / địa điểm / ngành / văn hóa). Chuyển thành trọng số 0–1 cho `target.priorities` (tổng ~1) — đây là dữ liệu quan trọng cho scoring-rubric.
+6. **Ưu tiên** (priorities): cái gì quan trọng nhất? (lương / kỹ năng phù hợp / địa điểm / ngành / văn hóa). Chuyển thành trọng số 0–1 cho `target.priorities` (tổng ~1) — đây là dữ liệu quan trọng cho skill `scoring-rubric`.
 
 ## Bước 4 — Ghi file
 

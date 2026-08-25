@@ -1,3 +1,8 @@
+---
+name: fit-analyzer
+description: Với các job trong shortlist, giải thích mức độ phù hợp, khoảng cách kỹ năng/kinh nghiệm, rủi ro, và gợi ý cải thiện — dạng báo cáo dễ đọc cho ứng viên. Dùng sau khi agent job-matcher đã tạo shortlist.
+---
+
 # Fit Analyzer — báo cáo phù hợp & khoảng cách
 
 Đầu vào: `profile.json` + `data/results/<run-id>.shortlist.json` (mảng MatchResult + job tương ứng).

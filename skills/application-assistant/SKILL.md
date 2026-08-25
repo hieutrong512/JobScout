@@ -1,10 +1,12 @@
+---
+name: application-assistant
+description: Tùy chỉnh (tailor) nội dung CV và viết cover letter cho một job cụ thể dựa trên profile và JD. Dùng khi ứng viên đã chọn được job muốn apply và cần chuẩn bị hồ sơ.
+---
+
 # Application Assistant — tailor hồ sơ theo job
 
 Đầu vào: `profile.json` + 1 job (từ jobs.json hoặc URL/JD dán vào) + (tùy chọn) MatchResult để biết gaps.
 Đầu ra: bản nháp CV bullets đã điều chỉnh và/hoặc cover letter.
-
-> Bước tùy chọn, chạy sau khi ứng viên đã chọn được job muốn apply. Không nằm trong
-> `/find-jobs`; gọi riêng khi cần.
 
 ## Tailor CV bullets
 

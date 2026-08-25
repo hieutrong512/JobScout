@@ -1,33 +1,35 @@
-# JobMatching (Codex edition)
+# JobMatching — Codex plugin
 
-Bộ công cụ cho **OpenAI Codex CLI** giúp tìm và xếp hạng các job phù hợp nhất với
-**target** và **CV** của ứng viên. Xử lý song ngữ Việt–Anh, lấy dữ liệu job qua
-**Search Engine + web scraping** (tool `web_search` của Codex — không cần API key).
-
-> Trước đây repo là plugin Claude Code (skills + subagents). Bản này đã port sang Codex:
-> Codex không có subagent/skill tự-kích-hoạt, nên toàn bộ logic gộp thành **một luồng
-> tuần tự** điều khiển bởi `AGENTS.md` + reference docs, chạy qua lệnh `/find-jobs`.
+Plugin cho **OpenAI Codex CLI**: tìm và xếp hạng các job phù hợp nhất với **target** và
+**CV** của ứng viên. Song ngữ Việt–Anh, lấy dữ liệu job qua **Search Engine + web scraping**
+(tool `web_search` của Codex — không cần API key).
 
 ## Cài đặt
 
-Codex tự nạp `AGENTS.md` ở gốc repo → chỉ cần mở Codex trong thư mục này là dùng được
-bằng ngôn ngữ tự nhiên. Để có slash command `/find-jobs`, copy prompt vào `~/.codex/prompts/`:
+Plugin cài qua marketplace của Codex (v0.120.0+). Trỏ tới repo local hoặc git:
 
-**Windows (PowerShell):**
 ```bash
-Copy-Item codex\prompts\find-jobs.md "$env:USERPROFILE\.codex\prompts\find-jobs.md"
+codex marketplace add D:\StartUp\JobMatching
 ```
 
-**macOS/Linux:**
+Hoặc từ GitHub shorthand / git URL:
+
 ```bash
-mkdir -p ~/.codex/prompts && cp codex/prompts/find-jobs.md ~/.codex/prompts/
+codex marketplace add <owner>/<repo>
 ```
+
+Plugin có `install_policy = "AVAILABLE"` (opt-in) — sau khi add, bật nó trong Codex rồi dùng.
+
+> Kiểm tra lệnh chính xác theo phiên bản Codex của bạn: `codex marketplace --help`.
 
 Bật web search (bắt buộc cho bước thu thập job) — chọn một:
+
 ```bash
 codex --search
 ```
+
 hoặc thêm vào `~/.codex/config.toml`:
+
 ```toml
 [tools]
 web_search = true
@@ -35,38 +37,44 @@ web_search = true
 
 ## Cách dùng
 
-Full pipeline:
-```bash
-/find-jobs D:\path\to\CV.pdf
-```
+Chạy full pipeline — kích hoạt skill `find-jobs`:
 
-Hoặc bằng ngôn ngữ tự nhiên (Codex đọc `AGENTS.md`): "parse CV này", "tìm job cho tôi",
-"chấm điểm các job", "làm báo cáo fit".
+> "tìm job cho tôi từ CV `D:\path\CV.pdf`"
+
+Hoặc gọi từng phần bằng ngôn ngữ tự nhiên (skill/agent tự kích hoạt theo mô tả):
+"parse CV này", "thu thập job", "chấm điểm các job", "làm báo cáo fit", "tailor CV cho job này".
 
 ## Pipeline
 
 ```
 CV + Target
-   │  [1] intake            → data/profiles/<slug>.json
+   │  [1] candidate-intake (skill)   → data/profiles/<slug>.json
    ▼
-   │  [2] collect (web_search) → data/jobs/<run-id>.json   (chỉ job xem được full JD & còn hạn, tối đa 20)
+   │  [2] job-collector (agent)      → data/jobs/<run-id>.json   (web_search; chỉ job xem được full JD & còn hạn, tối đa 20)
    ▼
-   │  [3] match (scoring)   → data/results/<run-id>.shortlist.json
+   │  [3] job-matcher (agent)        → data/results/<run-id>.shortlist.json
    ▼
-   │  [4] fit report        → data/results/<run-id>.fit_report.md
+   │  [4] fit-analyzer (skill)       → data/results/<run-id>.fit_report.md
    ▼
-   [5] application-assistant (tùy chọn) → CV bullets / cover letter
+   [5] application-assistant (skill, tùy chọn) → CV bullets / cover letter
 ```
 
-## Cấu trúc repo
+## Cấu trúc plugin
 
 | Đường dẫn | Vai trò |
 |---|---|
-| `AGENTS.md` | Playbook Codex tự nạp: pipeline, nguyên tắc, trỏ tới reference |
-| `codex/prompts/find-jobs.md` | Lệnh `/find-jobs` — điều phối full pipeline |
-| `codex/reference/*.md` | Logic chi tiết từng bước (intake, collector, matcher, scoring, fit, normalization, schema, application) |
+| `plugin.json` | Manifest — khai báo skills + agents + install_policy |
+| `skills/find-jobs/` | Skill điều phối full pipeline (một-lệnh) |
+| `skills/candidate-intake/` | Parse CV + hỏi target → profile.json |
+| `skills/scoring-rubric/` | Công thức tính điểm khớp (nền tảng) |
+| `skills/job-schema/` | Cách điền `schemas/job.schema.json` |
+| `skills/bilingual-normalization/` | Chuẩn hóa skill/chức danh/lương Việt–Anh |
+| `skills/fit-analyzer/` | Giải thích fit + gap → fit_report.md |
+| `skills/application-assistant/` | Tailor CV / cover letter (tùy chọn) |
+| `agents/job-collector.toml` | Subagent: search + scrape JD → jobs.json |
+| `agents/job-matcher.toml` | Subagent: chấm điểm & rank → shortlist.json |
 | `schemas/*.json` | Data contracts: profile / job / match |
-| `data/{profiles,jobs,results}/` | Dữ liệu chạy (không commit dữ liệu nhạy cảm) |
+| `data/{profiles,jobs,results}/` | Dữ liệu chạy (gitignore dữ liệu nhạy cảm) |
 
 ## Trọng số chấm điểm (mặc định)
 

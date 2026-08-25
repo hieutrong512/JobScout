@@ -1,7 +1,11 @@
+---
+name: bilingual-normalization
+description: Chuẩn hóa kỹ năng, chức danh, địa điểm và lương giữa tiếng Việt và tiếng Anh về dạng canonical, phục vụ so khớp job/CV chính xác. Dùng khi parse CV, chuẩn hóa JD, hoặc so khớp skills/lương trong scoring.
+---
+
 # Bilingual Normalization — chuẩn hóa Việt–Anh
 
-Mục tiêu: mọi so khớp diễn ra trên **canonical name** thống nhất, tránh trượt vì khác
-ngôn ngữ/cách viết. Áp dụng khi parse CV, chuẩn hóa JD, và khi so khớp skills/lương lúc chấm điểm.
+Mục tiêu: mọi so khớp diễn ra trên **canonical name** thống nhất, tránh trượt vì khác ngôn ngữ/cách viết.
 
 ## Skills — canonical name
 
