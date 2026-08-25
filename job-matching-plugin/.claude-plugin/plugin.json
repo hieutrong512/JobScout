@@ -1,0 +1,17 @@
+{
+  "name": "job-matching",
+  "version": "1.0.0",
+  "description": "Tìm và xếp hạng job phù hợp nhất với target + CV của ứng viên. Pipeline: parse CV → thu thập job (chỉ job xem được & còn hạn) → chấm điểm theo rubric → báo cáo fit/gap. Song ngữ Việt-Anh.",
+  "author": {
+    "name": "Nguyen Trong Hieu",
+    "email": "hieutrong512@gmail.com"
+  },
+  "keywords": [
+    "job-matching",
+    "recruitment",
+    "cv",
+    "career",
+    "vietnam",
+    "ai-agents"
+  ]
+}

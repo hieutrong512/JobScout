@@ -1,0 +1,60 @@
+# ===== Dữ liệu cá nhân / nhạy cảm =====
+# Profile ứng viên (CV đã parse, thông tin cá nhân)
+data/profiles/
+# Kết quả tìm việc, shortlist, báo cáo (chứa dữ liệu cá nhân)
+data/results/
+# Tin tuyển dụng đã thu thập (thường không cần commit)
+data/jobs/
+
+# Các file CV gốc
+*.pdf
+*.docx
+*.doc
+
+# ===== Cấu hình local / bí mật =====
+.env
+.env.*
+!.env.example
+*.local
+.claude/settings.local.json
+secrets.json
+credentials.json
+*.key
+*.pem
+
+# ===== Node / JS =====
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+dist/
+build/
+.cache/
+
+# ===== Python =====
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+*.egg-info/
+
+# ===== Logs & temp =====
+*.log
+logs/
+tmp/
+temp/
+*.tmp
+*.bak
+
+# ===== OS =====
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ===== IDE =====
+.vscode/
+.idea/
+*.swp
+*.swo
