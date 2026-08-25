@@ -1,8 +1,3 @@
----
-name: scoring-rubric
-description: Công thức chấm điểm mức độ khớp giữa 1 job và profile ứng viên. Dùng bởi job-matcher và bất kỳ nơi nào cần đánh giá độ phù hợp job/CV. Định nghĩa trọng số, cách tính từng chiều, hard filter (dealbreakers), và cách xử lý dữ liệu thiếu.
----
-
 # Scoring Rubric — chấm điểm khớp job ↔ profile
 
 Đây là "bộ não" quyết định chất lượng match. Kết quả tuân theo `schemas/match.schema.json`.
@@ -38,7 +33,7 @@ Trước khi chấm điểm, kiểm tra `profile.target.dealbreakers` và các r
 ## Cách tính từng chiều
 
 ### skills (0–100)
-- Chuẩn hóa mọi skill về canonical name (dùng skill `bilingual-normalization`) trước khi so khớp.
+- Chuẩn hóa mọi skill về canonical name (theo `codex/reference/bilingual-normalization.md`) trước khi so khớp.
 - `must_cover` = tỉ lệ must-have của job mà profile đáp ứng.
 - `nice_cover` = tỉ lệ nice-to-have đáp ứng.
 - `skills_score = 100 * (0.75 * must_cover + 0.25 * nice_cover)`.
@@ -66,7 +61,7 @@ Trước khi chấm điểm, kiểm tra `profile.target.dealbreakers` và các r
 - onsite ngoài vùng chấp nhận (chưa tới mức dealbreaker) → 25.
 
 ### compensation (0–100)
-- Cần đưa về cùng đơn vị (VND/tháng) — dùng `bilingual-normalization` để quy đổi USD↔VND & year↔month.
+- Cần đưa về cùng đơn vị (VND/tháng) — theo `codex/reference/bilingual-normalization.md` để quy đổi USD↔VND & year↔month.
 - job_mid = trung bình (min,max). So với `target.salary.target` (hoặc min).
 - job_mid ≥ target → 100; trong khoảng [min, target] → nội suy 70–100; dưới min nhưng ≥ 90% min → 50; thấp hơn → 20.
 - Lương unknown → điểm neutral 60, hạ confidence (KHÔNG chấm 0).

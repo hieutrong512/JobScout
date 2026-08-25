@@ -1,21 +1,19 @@
----
-name: candidate-intake
-description: Parse CV của ứng viên (PDF/DOCX/text) và thu thập target/mong muốn để tạo profile.json chuẩn. Dùng khi bắt đầu một phiên tìm việc, khi người dùng cung cấp CV mới, hoặc muốn cập nhật mục tiêu nghề nghiệp.
----
-
 # Candidate Intake — tạo profile ứng viên
 
-Đầu ra: một file `data/profiles/<slug>.json` tuân theo `${CLAUDE_PLUGIN_ROOT}/schemas/profile.schema.json`.
+Đầu ra: một file `data/profiles/<slug>.json` tuân theo `schemas/profile.schema.json`.
 
 ## Bước 1 — Đọc CV
 
-- PDF → dùng skill `pdf` (anthropic-skills) để trích text. DOCX → skill `docx`. Text/markdown → đọc trực tiếp.
+- Trích text từ CV:
+  - **PDF** → dùng CLI có sẵn trong sandbox: `pdftotext cv.pdf -` (poppler), hoặc `python -c "import pypdf; ..."`. Nếu không có tool, yêu cầu người dùng dán nội dung CV.
+  - **DOCX** → `python -c "import docx; ..."` (python-docx), hoặc unzip đọc `word/document.xml`.
+  - **Text/Markdown** → đọc trực tiếp.
 - Trích: thông tin cá nhân tối thiểu (tên, headline, location), kỹ năng, kinh nghiệm (title/công ty/thời gian/highlights), học vấn, ngôn ngữ.
 - Suy `total_years` và `seniority` từ tổng thời gian + phạm vi trách nhiệm.
 
 ## Bước 2 — Chuẩn hóa (song ngữ)
 
-- Áp skill `bilingual-normalization`: đưa skills & chức danh về canonical name, chuẩn hóa location.
+- Áp `codex/reference/bilingual-normalization.md`: đưa skills & chức danh về canonical name, chuẩn hóa location.
 - Với mỗi skill, cố gắng gắn `years`/`level`/`evidence` từ CV (không bịa — thiếu thì để trống).
 
 ## Bước 3 — Thu thập target
@@ -27,7 +25,7 @@ Hỏi ứng viên (gộp câu hỏi, đừng hỏi lẻ tẻ). Nếu người d�
 3. **Lương kỳ vọng** (min & target, VND hay USD, tháng/năm).
 4. **Ngành** ưu tiên + **quy mô công ty**.
 5. **Dealbreakers** — điều tuyệt đối không chấp nhận.
-6. **Ưu tiên** (priorities): cái gì quan trọng nhất? (lương / kỹ năng phù hợp / địa điểm / ngành / văn hóa). Chuyển thành trọng số 0–1 cho `target.priorities` (tổng ~1) — đây là dữ liệu quan trọng cho `scoring-rubric`.
+6. **Ưu tiên** (priorities): cái gì quan trọng nhất? (lương / kỹ năng phù hợp / địa điểm / ngành / văn hóa). Chuyển thành trọng số 0–1 cho `target.priorities` (tổng ~1) — đây là dữ liệu quan trọng cho scoring-rubric.
 
 ## Bước 4 — Ghi file
 

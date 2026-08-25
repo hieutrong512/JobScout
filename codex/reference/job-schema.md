@@ -1,22 +1,17 @@
----
-name: job-schema
-description: Schema chuẩn cho một tin tuyển dụng (job) và cách map dữ liệu thô từ search/scrape vào schema đó. Dùng bởi job-collector khi chuẩn hóa JD, và job-matcher khi đọc job.
----
-
 # Job Schema — chuẩn hóa tin tuyển dụng
 
-Schema chính: `schemas/job.schema.json`. Skill này hướng dẫn cách điền cho nhất quán.
+Schema chính: `schemas/job.schema.json`. Doc này hướng dẫn cách điền cho nhất quán.
 
 ## Quy tắc bắt buộc
 
 - `id`: tạo hash ổn định. Ưu tiên chuẩn hóa URL (bỏ query tracking) rồi hash; nếu không có URL sạch, hash chuỗi `company|title|location` (lowercase, bỏ dấu). Dùng để **khử trùng lặp** giữa các nguồn.
 - `source`: định danh nguồn ngắn gọn: `itviec`, `topcv`, `vietnamworks`, `linkedin`, `careerviet`, `google`, ...
 - `collected_at`: ISO timestamp.
-- `extraction_confidence` (0–1): **cao** khi fetch được full JD; **thấp** (≤0.4) khi chỉ có snippet từ search.
+- `extraction_confidence` (0–1): **cao** khi đọc được full JD; **thấp** (≤0.4) khi chỉ có snippet từ search.
 
 ## Chuẩn hóa các trường
 
-- **skills** (`must_have_skills`, `nice_to_have_skills`): đưa về canonical name qua skill `bilingual-normalization` (vd "ReactJS", "React.js" → "React").
+- **skills** (`must_have_skills`, `nice_to_have_skills`): đưa về canonical name theo `codex/reference/bilingual-normalization.md` (vd "ReactJS", "React.js" → "React").
 - **salary**: parse cả tiếng Việt ("15-20 triệu", "thỏa thuận", "Up to $2000") → {min, max, currency, period, negotiable}. "Thỏa thuận"/"Negotiable" → currency=unknown, negotiable=true.
 - **remote**: nhận diện "remote", "làm việc từ xa", "hybrid", "onsite", "tại văn phòng".
 - **seniority**: suy từ title/JD ("Junior", "Senior", "Trưởng nhóm"→lead, "Fresher"→junior).
