@@ -17,7 +17,8 @@ Dùng `<run-id>` = ngày hiện tại (YYYY-MM-DD). Tạo thư mục `data/profi
 
 ## Bước 2 — Collector (subagent `job-collector`)
 - Truyền đường dẫn `profile.json` và `data/jobs/<run-id>.json` làm output.
-- **Chỉ giữ job xem được full JD VÀ còn hạn** (bỏ snippet-only, 404/410, hết hạn). Mục tiêu tối đa 20 job hợp lệ.
+- Tìm kiếm từ các Job Boards (ITviec, TopCV, VietnamWorks, LinkedIn...) và các **Hội nhóm Facebook công khai** (Vietnam AI Community, J2TEAM, Tuyển Dụng IT...).
+- Giữ job theo chuẩn: Job boards cần full JD & còn hạn; Facebook post chỉ cần Title + Vị trí/Địa điểm + Kênh liên hệ/Link bài viết. Mục tiêu tối đa 20 job hợp lệ.
 
 ## Bước 3 — Matcher (subagent `job-matcher`)
 - Truyền `profile.json` + `data/jobs/<run-id>.json`.
@@ -26,7 +27,7 @@ Dùng `<run-id>` = ngày hiện tại (YYYY-MM-DD). Tạo thư mục `data/profi
 
 ## Bước 4 — Fit report (skill `fit-analyzer`)
 - Đọc shortlist → tạo `data/results/<run-id>.fit_report.md`.
-- **Mọi job trong bảng xếp hạng đều có link nộp CV**; phân tích chi tiết top 20 (hoặc toàn bộ).
+- **Mọi job trong bảng xếp hạng đều có link nộp CV / bài post**; phân tích chi tiết top 20 (hoặc toàn bộ).
 - Gửi file báo cáo cho người dùng.
 
 ## Sau khi xong

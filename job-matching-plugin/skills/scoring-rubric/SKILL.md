@@ -78,6 +78,10 @@ Trước khi chấm điểm, kiểm tra `profile.target.dealbreakers` và các r
 ## Xử lý dữ liệu thiếu
 
 - Không bao giờ chấm 0 vì "thiếu thông tin" — dùng điểm **neutral** (55–60) và **giảm `confidence`**.
+- **Với tin tuyển dụng Facebook Groups ngắn** (chỉ có title, vị trí, vài tech keywords, lương ngắn gọn và contact):
+  - Chấm `skills` dựa trên các keywords công nghệ trích được từ bài post.
+  - Các chiều thiếu (culture, domain chi tiết) chấm điểm neutral (60) và gán `confidence` khoảng 0.55–0.65.
+  - Trong `rationale`: nêu rõ `"Tin từ Facebook Group: Cần inbox/Zalo người đăng để nhận full JD"`.
 - `confidence` tổng của match ≈ trung bình có trọng số của `job.extraction_confidence` và độ đầy đủ dữ liệu các chiều.
 - Match có confidence < 0.4 nên được đánh dấu "cần xác minh JD" trong rationale.
 

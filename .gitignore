@@ -10,6 +10,7 @@ data/jobs/
 *.pdf
 *.docx
 *.doc
+*.zip
 
 # ===== Cấu hình local / bí mật =====
 .env
