@@ -1,34 +1,32 @@
 # JobMatching — Codex plugin
 
-Repo này **là một Codex plugin** (`plugin.json` ở gốc): tìm và xếp hạng job phù hợp nhất
+Repo này **là một Codex plugin** (`.codex-plugin/plugin.json` là manifest chuẩn): tìm và xếp hạng job phù hợp nhất
 với **target** và **CV** của ứng viên, song ngữ Việt–Anh. Lấy dữ liệu job qua
 **Search Engine + web scraping** (tool `web_search` của Codex — không cần API key).
 
 ## Thành phần plugin
 
 - **Skills** (`skills/*/SKILL.md`): `find-jobs` (điều phối full pipeline), `candidate-intake`,
-  `scoring-rubric`, `job-schema`, `bilingual-normalization`, `fit-analyzer`, `application-assistant`.
+  `scoring-rubric`, `job-schema`, `bilingual-normalization`, `fit-analyzer`, `application-assistant`, `fb-crawler`.
 - **Agents** (`agents/*.toml`): `job-collector`, `job-matcher` — subagent chạy context riêng
   cho các bước tốn token (search/scrape, chấm điểm bulk).
 - **Schemas** (`schemas/*.json`): data contracts profile / job / match.
 
-## Bật web search (bắt buộc cho bước thu thập job)
+## Bật web search & Playwright
 
-Bước collect cần tool `web_search`. Bật một trong hai:
-- `codex --search`
-- hoặc trong `~/.codex/config.toml`:
-  ```toml
-  [tools]
-  web_search = true
-  ```
+1. Bước collect cần tool `web_search`. Bật một trong hai:
+   - `codex --search`
+   - hoặc trong `~/.codex/config.toml`: `tools.web_search = true`
+2. Bước cào Facebook Groups dùng Playwright:
+   - `pip install playwright && playwright install chromium`
 
 ## Pipeline
 
 ```
 CV + Target
-   │  [1] candidate-intake (skill)   → data/profiles/<slug>.json
+   │  [1] candidate-intake (skill)   → data/profiles/<slug>.json (kèm hỏi người dùng bật nguồn Facebook)
    ▼
-   │  [2] job-collector (agent)      → data/jobs/<run-id>.json   (web_search: Job boards & FB Public Groups, tối đa 20)
+   │  [2] job-collector (agent)      → data/jobs/<run-id>.json   (Job boards + Tùy chọn: In-Group Facebook Crawler, tối đa 20)
    ▼
    │  [3] job-matcher (agent)        → data/results/<run-id>.shortlist.json
    ▼

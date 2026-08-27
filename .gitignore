@@ -5,6 +5,11 @@ data/profiles/
 data/results/
 # Tin tuyển dụng đã thu thập (thường không cần commit)
 data/jobs/
+# Cấu hình nguồn do người dùng cung cấp lúc chạy
+data/config/
+# Session / cookie xác thực Facebook
+data/.auth/
+*.session
 
 # Các file CV gốc
 *.pdf

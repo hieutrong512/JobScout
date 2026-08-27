@@ -13,23 +13,30 @@ không cần API key. `web_search` phải được bật (codex --search hoặc 
 nếu không có, dừng và báo người dùng bật.
 
 QUY TRÌNH:
-1. Sinh query song ngữ (EN + VN) từ target.desired_roles, desired_level, locations, top skills:
-   - Job boards VN: site:itviec.com, site:topcv.vn, site:vietnamworks.com, site:careerviet.vn, site:linkedin.com/jobs.
-   - Facebook Groups công khai: site:facebook.com/groups ("tuyển dụng" OR "hiring" OR "tìm đồng đội") "<role>" "<location>".
-     (Gợi ý group: Vietnam AI Community, Python Vietnam, J2TEAM Community, Tuyển dụng IT TP.HCM / Hà Nội, Tuyển dụng AI / Data Science...)
-2. Search từng query, gom URL + snippet / nội dung bài đăng, khử trùng theo URL chuẩn hóa.
-3. BỘ LỌC CỨNG (phân loại theo nguồn):
+1. THU THẬP TỪ CÁC NGUỒN:
+   - Kênh 1: Quét Facebook Groups qua In-Group Search (Tùy chọn - Cần người dùng đồng ý):
+     - KHÔNG chạy Python/Playwright bằng shell trong sandbox.
+     - Nếu người dùng đồng ý và cung cấp link, gọi tool MCP local `run_facebook_crawler` từ server `facebook_crawler`.
+     - Luôn truyền `workspace_root` là đường dẫn tuyệt đối của workspace hiện tại, `profile_path`, `config_path`, danh sách `groups` và các `queries` phù hợp.
+     - Lần đầu tool có thể mở Chromium để người dùng đăng nhập; session được giữ tại `<workspace_root>/data/.auth/facebook_state.json`.
+     - Khi tool thành công, đọc đúng `output_path` do tool trả về để đưa dữ liệu vào danh sách ứng viên. Nếu tool không khả dụng, báo lỗi cấu hình MCP; không fallback sang shell.
+   - Kênh 2: Job Boards truyền thống & Search Engine:
+     - Sinh query song ngữ (EN + VN) từ target.desired_roles, desired_level, locations, top skills: `site:itviec.com`, `site:topcv.vn`, `site:vietnamworks.com`, `site:careerviet.vn`, `site:linkedin.com/jobs`.
+     - Dùng tool `web_search` cho từng query, gom URL + snippet, đọc full JD.
+
+2. BỘ LỌC CỨNG (phân loại theo nguồn):
    (a) Với Job boards truyền thống (ITviec, TopCV, VietnamWorks, LinkedIn):
        - Phải xem được full JD và còn hạn (extraction_confidence ≥ 0.5; bỏ nếu 404/410, hết hạn, redirect).
-   (b) Với bài đăng Facebook Groups công khai:
+   (b) Với bài đăng Facebook Groups:
        - ĐẶC THÙ: HR thường đăng ngắn để câu tương tác (inbox/Zalo/comment lấy JD). KHÔNG bắt buộc có link JD ngoài.
        - TIÊU CHUẨN GIỮ: Chỉ cần có [Title/Vị trí] + [Địa điểm/Remote] + [Link bài post hoặc kênh liên hệ (Zalo, Inbox, Email, Phone)].
        - Bóc tách contact: email, zalo, telegram, profile người đăng, hoặc hướng dẫn "inbox/comment".
-       - Thời hạn: Ưu tiên bài đăng gần nhất (trong vòng 30 ngày). Bỏ nếu bài viết đã bị xóa / quá cũ.
+       - Thời hạn: Ưu tiên bài đăng gần nhất (trong vòng 30–45 ngày).
    KHÔNG vượt anti-bot/CAPTCHA. Tôn trọng robots.txt/ToS.
-4. Chuẩn hóa theo skill `job-schema`; skills/location/lương theo skill `bilingual-normalization`.
+
+3. Chuẩn hóa theo skill `job-schema`; skills/location/lương theo skill `bilingual-normalization`.
    Tạo `id` hash ổn định để khử trùng. Set extraction_confidence trung thực (0.5-0.7 cho bài post FB ngắn).
-5. Ghi mảng job hợp lệ vào `data/jobs/<run-id>.json`. Trả tóm tắt: số job theo nguồn (Job boards vs Facebook Groups),
+4. Ghi mảng job hợp lệ vào `data/jobs/<run-id>.json`. Trả tóm tắt: số job theo nguồn (Job boards vs Facebook Groups),
    số bị bỏ, cảnh báo dữ liệu thiếu.
 
 NGUYÊN TẮC:
