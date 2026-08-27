@@ -29,10 +29,13 @@ Hỏi ứng viên (gộp câu hỏi, đừng hỏi lẻ tẻ). Nếu người d�
 5. **Dealbreakers** — điều tuyệt đối không chấp nhận.
 6. **Ưu tiên** (priorities): cái gì quan trọng nhất? (lương / kỹ năng phù hợp / địa điểm / ngành / văn hóa). Chuyển thành trọng số 0–1 cho `target.priorities` (tổng ~1) — đây là dữ liệu quan trọng cho `scoring-rubric`.
 
-## Bước 4 — Ghi file
-
+## Bước 4 — Ghi file & Xác nhận nguồn tìm kiếm
 - Ghi `profile.json` đúng schema. Đặt tên slug từ tên ứng viên (không dấu, kebab-case).
 - Tóm tắt lại cho người dùng xác nhận: seniority suy ra, top skills, target, và trọng số priorities. Cho phép chỉnh trước khi sang bước collector.
+- **Hỏi xác nhận nguồn tìm kiếm Facebook (Minh bạch & Nhập link động)**:
+  - Hỏi người dùng: *"Bạn có muốn tìm kiếm thêm tin tuyển dụng từ các Hội nhóm Facebook IT/AI không?"*  
+  - *(Cảnh báo: Nếu chọn Có và phiên đăng nhập chưa có sẵn, trình duyệt sẽ mở lên để bạn đăng nhập lấy cookie session — được lưu bảo mật cục bộ tại `data/.auth/`, không bao giờ chia sẻ ra ngoài).*
+  - **Nếu người dùng chọn Có**: Yêu cầu người dùng gửi link các Group Facebook công khai mục tiêu. Ghi danh sách link này vào `data/config/facebook_groups.json`.
 
 ## Nguyên tắc
 

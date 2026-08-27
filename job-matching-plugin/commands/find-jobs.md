@@ -13,11 +13,17 @@ Dùng `<run-id>` = ngày hiện tại (YYYY-MM-DD). Tạo thư mục `data/profi
 - Nếu `$ARGUMENTS` là file CV → parse và tạo `data/profiles/<slug>.json`.
 - Nếu là tên profile đã tồn tại → dùng lại, hỏi xem có cập nhật target không.
 - Thu thập/ xác nhận target: vai trò, cấp bậc, địa điểm/remote, lương, ưu tiên (priorities → trọng số), dealbreakers.
-- Tóm tắt cho người dùng xác nhận trước khi sang bước 2.
+- Tóm tắt cho người dùng xác nhận.
+- **Tùy chọn nguồn Facebook (Minh bạch & Động)**:
+  - Hỏi người dùng: *"Bạn có muốn quét thêm tin tuyển dụng từ các Hội nhóm Facebook không?"*
+  - *(Cảnh báo minh bạch: Nếu chọn Có và chưa có session, trình duyệt sẽ tự động mở lên để bạn đăng nhập Facebook lấy cookie session — được lưu bảo mật cục bộ tại `data/.auth/`, không bao giờ commit lên Git).*
+  - **Nếu người dùng chọn CÓ**: Yêu cầu người dùng **gửi danh sách link các Group Facebook công khai** mà họ muốn quét (ví dụ: `https://facebook.com/groups/pythonvietnam`, `https://facebook.com/groups/1407434203194440`...).
+  - Agent tự động ghi danh sách link này vào [`data/config/facebook_groups.json`](file:///d:/StartUp/JobMatching/data/config/facebook_groups.json).
 
 ## Bước 2 — Collector (subagent `job-collector`)
 - Truyền đường dẫn `profile.json` và `data/jobs/<run-id>.json` làm output.
-- Tìm kiếm từ các Job Boards (ITviec, TopCV, VietnamWorks, LinkedIn...) và các **Hội nhóm Facebook công khai** (Vietnam AI Community, J2TEAM, Tuyển Dụng IT...).
+- **Nguồn Job Boards**: Luôn quét từ ITviec, TopCV, VietnamWorks, LinkedIn...
+- **Nguồn Facebook Groups (Nếu người dùng đồng ý & cung cấp link ở Bước 1)**: Chạy `python scripts/fb_crawler.py --profile <profile.json> --config data/config/facebook_groups.json` để tìm kiếm trực tiếp trong các group mục tiêu vừa nạp.
 - Giữ job theo chuẩn: Job boards cần full JD & còn hạn; Facebook post chỉ cần Title + Vị trí/Địa điểm + Kênh liên hệ/Link bài viết. Mục tiêu tối đa 20 job hợp lệ.
 
 ## Bước 3 — Matcher (subagent `job-matcher`)

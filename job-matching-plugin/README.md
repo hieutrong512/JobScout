@@ -31,8 +31,8 @@ Hoặc gọi từng bước bằng ngôn ngữ tự nhiên (skill tự kích ho�
 ```
 CV + Target
    │  candidate-intake (skill)
-   ▼  → data/profiles/<slug>.json
-job-collector (subagent)        ← WebSearch + WebFetch (Job boards & FB Groups, tối đa 20)
+   ▼  → data/profiles/<slug>.json (kèm hỏi người dùng xác nhận bật nguồn Facebook)
+job-collector (subagent)        ← Job boards + Tùy chọn: In-Group Facebook Crawler (tối đa 20)
    ▼  → data/jobs/<run-id>.json
 job-matcher (subagent)          ← chấm điểm theo scoring-rubric
    ▼  → data/results/<run-id>.shortlist.json
@@ -45,9 +45,9 @@ application-assistant (skill, tùy chọn) ← tailor CV/cover letter & tin nh�
 
 | Thành phần | Loại | Vai trò |
 |---|---|---|
-| `find-jobs` | Command | Điều phối toàn bộ pipeline |
+| `find-jobs` | Command | Điều phối toàn bộ pipeline (hỏi bật nguồn Facebook minh bạch) |
 | `candidate-intake` | Skill | Parse CV + target → profile.json |
-| `job-collector` | Agent | Search + scrape từ Job boards & FB Groups → jobs.json |
+| `job-collector` | Agent | Search + scrape từ Job boards (và FB Groups nếu được bật) → jobs.json |
 | `job-matcher` | Agent | Chấm điểm & rank → shortlist.json |
 | `fit-analyzer` | Skill | Báo cáo fit/gap (link nộp CV / bài post cho mọi job) |
 | `application-assistant` | Skill | Tailor CV / cover letter / tin nhắn tiếp cận HR (Zalo/FB) |
@@ -68,7 +68,7 @@ skills 35% · seniority 20% · domain 15% · compensation 15% · location 5% · 
 ## Ghi chú vận hành
 
 - **Tiêu chuẩn thu thập theo nguồn**:
-  - *Job boards truyền thống* (ITviec, TopCV, VietnamWorks, LinkedIn): Chỉ giữ job xem được full JD và còn hạn.
-  - *Hội nhóm Facebook công khai*: HR thường đăng teaser câu tương tác (inbox/Zalo/comment lấy JD), chỉ cần có **Title + Vị trí/Địa điểm + Kênh liên hệ/Link bài post** (không bắt buộc có link full JD ngoài).
+  - *Job boards truyền thống* (ITviec, TopCV, VietnamWorks, LinkedIn): Luôn được quét chính thống, chỉ giữ job xem được full JD và còn hạn.
+  - *Hội nhóm Facebook (Tùy chọn)*: Quét qua In-Group Search trực tiếp với từ khóa chuyên môn. Cần người dùng xác nhận bật và đăng nhập lấy session cookie (lưu bảo mật tại `data/.auth/`).
 - Giữ nguyên đơn vị lương gốc theo JD; chỉ quy đổi khi so sánh (tỉ giá $1 = 26.100 VND).
 - Tôn trọng robots.txt/ToS; không vượt anti-bot/CAPTCHA; không tự nộp hồ sơ / gửi tin nhắn thay người dùng.

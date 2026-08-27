@@ -22,6 +22,8 @@ secrets.json
 credentials.json
 *.key
 *.pem
+data/.auth/
+*.session
 
 # ===== Node / JS =====
 node_modules/

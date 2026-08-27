@@ -11,16 +11,24 @@ Nhiệm vụ: từ `profile.json`, tìm và chuẩn hóa danh sách job → `dat
 
 ## Quy trình
 
-### 1. Sinh truy vấn tìm kiếm
+### 1. Thu thập từ các nguồn
+
+#### Kênh 1: Quét trực tiếp Facebook Groups qua In-Group Search (Tùy chọn - Cần người dùng đồng ý)
+- **Hỏi xác nhận, cảnh báo minh bạch & nhận link group động**:
+  - Đảm bảo người dùng đã đồng ý quét nguồn Facebook và đã cung cấp danh sách link các Group Facebook mục tiêu.
+  - Agent lưu danh sách link này vào `data/config/facebook_groups.json` (hoặc truyền qua `--groups "<urls>"`).
+- Nếu người dùng đồng ý:
+  - Chạy script: `python scripts/fb_crawler.py --profile data/profiles/<profile>.json --config data/config/facebook_groups.json`
+  - Script sẽ tự động tìm kiếm các từ khóa mục tiêu (`AI Engineer`, `Computer Vision`, `LLM`, `YOLO`) trực tiếp trong từng Group được cung cấp, bóc tách permalink, tác giả, và thông tin liên hệ.
+  - Kết quả cào được lưu tại `data/jobs/raw_fb_posts_<date>.json`.
+  - Đọc file này để trích xuất các bài tuyển dụng Facebook vào pipeline.
+- Nếu người dùng không chọn Facebook: Bỏ qua kênh này và chỉ thu thập qua Kênh 2.
+
+#### Kênh 2: Job Boards truyền thống & Search Engine
 Từ `target.desired_roles`, `desired_level`, `locations`, top skills, tạo nhiều biến thể query **song ngữ**:
 - **Job boards VN**: `site:itviec.com`, `site:topcv.vn`, `site:vietnamworks.com`, `site:careerviet.vn`, và `site:linkedin.com/jobs`.
-- **Facebook Groups công khai**: `site:facebook.com/groups ("tuyển dụng" OR "hiring" OR "tìm đồng đội") "<role>" "<location>"`.
-  (Gợi ý các nhóm: *Vietnam AI Community, Cộng đồng Python Việt Nam, J2TEAM Community, Tuyển Dụng IT TP.HCM / Hà Nội, Tuyển dụng AI / Data Science...*)
-- Biến thể theo từng desired_role và location.
-
-### 2. Search
-- Dùng `WebSearch` cho từng query, gom URL + snippet / nội dung bài đăng.
-- Khử trùng theo URL chuẩn hóa. Ưu tiên tin còn hạn / mới đăng nếu nhận biết được.
+- Dùng `WebSearch` cho từng query, gom URL + snippet.
+- Khử trùng theo URL chuẩn hóa. Ưu tiên tin còn hạn / mới đăng.
 
 ### 3. Fetch & extract — BỘ LỌC PHÂN LOẠI THEO NGUỒN
 Tiêu chuẩn chấp nhận một job tùy thuộc vào nguồn thu thập:
