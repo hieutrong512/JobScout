@@ -18,7 +18,7 @@ Nhiệm vụ: từ `profile.json`, tìm và chuẩn hóa danh sách job → `dat
   - Đảm bảo người dùng đã đồng ý quét nguồn Facebook và đã cung cấp danh sách link các Group Facebook mục tiêu.
   - Agent lưu danh sách link này vào `data/config/facebook_groups.json` (hoặc truyền qua `--groups "<urls>"`).
 - Nếu người dùng đồng ý:
-  - Chạy script: `python scripts/fb_crawler.py --profile data/profiles/<profile>.json --config data/config/facebook_groups.json`
+  - Chạy script: `python scripts/fb_crawler.py --profile data/profiles/<profile>.json --config data/config/facebook_groups.json` (hoặc `python "${CLAUDE_PLUGIN_ROOT}/scripts/fb_crawler.py"` nếu chạy từ plugin).
   - Script sẽ tự động tìm kiếm các từ khóa mục tiêu (`AI Engineer`, `Computer Vision`, `LLM`, `YOLO`) trực tiếp trong từng Group được cung cấp, bóc tách permalink, tác giả, và thông tin liên hệ.
   - Kết quả cào được lưu tại `data/jobs/raw_fb_posts_<date>.json`.
   - Đọc file này để trích xuất các bài tuyển dụng Facebook vào pipeline.
