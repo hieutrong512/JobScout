@@ -58,7 +58,7 @@ class PluginIntegrityTests(unittest.TestCase):
         )
         entry = next(plugin for plugin in marketplace["plugins"] if plugin["name"] == manifest["name"])
 
-        self.assertEqual(manifest["version"], "1.0.1")
+        self.assertEqual(manifest["version"], "1.1.0")
         self.assertEqual(entry["version"], manifest["version"])
         self.assertEqual(marketplace["metadata"]["version"], manifest["version"])
 
@@ -101,15 +101,52 @@ class PluginIntegrityTests(unittest.TestCase):
         frontmatter = _frontmatter(command_path.read_text(encoding="utf-8"))
         self.assertIn("\ndescription:", frontmatter)
 
-    def test_plugin_root_placeholders_use_claude_convention(self):
-        # Skill/agent/command tham chiếu tài nguyên đóng gói phải dùng ${CLAUDE_PLUGIN_ROOT},
-        # không dùng biến của Codex.
+    # ----- Dual-manifest (Claude + Codex) integrity -----
+
+    def test_codex_manifest_is_valid(self):
+        manifest_path = PLUGIN_ROOT / ".codex-plugin" / "plugin.json"
+        self.assertTrue(manifest_path.is_file(), "Thiếu manifest Codex")
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(manifest["name"], "job-matching")
+        self.assertEqual(manifest["version"], "1.1.0")
+        self.assertEqual(manifest.get("skills"), "./skills/")
+        self.assertEqual(manifest.get("mcpServers"), "./.codex-plugin/mcp.json")
+
+    def test_codex_mcp_server_declared(self):
+        mcp_path = PLUGIN_ROOT / ".codex-plugin" / "mcp.json"
+        mcp = json.loads(mcp_path.read_text(encoding="utf-8"))
+        server = mcp["mcpServers"]["facebook_crawler"]
+        self.assertIn(
+            "launch_facebook_crawler_mcp.cmd",
+            " ".join(server.get("args", [])),
+        )
+        launcher = PLUGIN_ROOT / "scripts" / "launch_facebook_crawler_mcp.cmd"
+        self.assertTrue(launcher.is_file(), "Thiếu launcher MCP cho Codex")
+
+    def test_claude_and_codex_manifest_names_match(self):
+        claude = json.loads((PLUGIN_ROOT / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))
+        codex = json.loads((PLUGIN_ROOT / ".codex-plugin" / "plugin.json").read_text(encoding="utf-8"))
+        self.assertEqual(claude["name"], codex["name"])
+        self.assertEqual(claude["version"], codex["version"])
+
+    def test_each_agent_has_both_claude_and_codex_form(self):
+        md_agents = {p.stem for p in (PLUGIN_ROOT / "agents").glob("*.md")}
+        toml_agents = {p.stem for p in (PLUGIN_ROOT / "agents").glob("*.toml")}
+        self.assertTrue(md_agents, "Không có agent .md (Claude)")
+        self.assertEqual(
+            md_agents,
+            toml_agents,
+            f"Agent Claude (.md) và Codex (.toml) phải khớp bộ: md={md_agents} toml={toml_agents}",
+        )
+
+    def test_shared_skills_are_plugin_root_relative(self):
+        # Skill dùng chung không được hardcode ${CLAUDE_PLUGIN_ROOT} (Codex không expand được).
         offenders = []
-        for path in PLUGIN_ROOT.rglob("*.md"):
-            text = path.read_text(encoding="utf-8")
-            if "CODEX_PLUGIN_ROOT" in text or "web_search" in text:
+        for path in (PLUGIN_ROOT / "skills").rglob("SKILL.md"):
+            if "${CLAUDE_PLUGIN_ROOT}" in path.read_text(encoding="utf-8"):
                 offenders.append(str(path.relative_to(PLUGIN_ROOT)))
-        self.assertEqual(offenders, [], f"Còn sót dấu vết Codex: {offenders}")
+        self.assertEqual(offenders, [], f"Skill dùng chung còn dùng biến Claude: {offenders}")
 
 
 if __name__ == "__main__":

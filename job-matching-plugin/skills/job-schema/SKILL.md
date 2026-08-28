@@ -5,7 +5,7 @@ description: Schema chuẩn cho một tin tuyển dụng (job) và cách map d�
 
 # Job Schema — chuẩn hóa tin tuyển dụng
 
-Schema chính: `${CLAUDE_PLUGIN_ROOT}/schemas/job.schema.json`. Skill này hướng dẫn cách điền cho nhất quán.
+Schema chính: `./schemas/job.schema.json`. Skill này hướng dẫn cách điền cho nhất quán.
 
 ## Quy tắc bắt buộc
 

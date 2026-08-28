@@ -5,11 +5,14 @@ description: Parse CV của ứng viên (PDF/DOCX/text) và thu thập target/mo
 
 # Candidate Intake — tạo profile ứng viên
 
-Đầu ra: một file `data/profiles/<slug>.json` tuân theo `${CLAUDE_PLUGIN_ROOT}/schemas/profile.schema.json`.
+Đầu ra: một file `data/profiles/<slug>.json` tuân theo `./schemas/profile.schema.json`.
 
 ## Bước 1 — Đọc CV
 
-- PDF → dùng skill `pdf` (anthropic-skills) để trích text. DOCX → skill `docx`. Text/markdown → đọc trực tiếp.
+- Trích text từ CV:
+  - **PDF** → Claude Code: dùng skill `pdf` (anthropic-skills). Codex/CLI: `pdftotext cv.pdf -` (poppler) hoặc `python -c "import pypdf; ..."`. Không có tool → yêu cầu người dùng dán nội dung CV.
+  - **DOCX** → Claude Code: skill `docx`. Codex/CLI: `python -c "import docx; ..."` (python-docx) hoặc unzip đọc `word/document.xml`.
+  - **Text/Markdown** → đọc trực tiếp.
 - Trích: thông tin cá nhân tối thiểu (tên, headline, location), kỹ năng, kinh nghiệm (title/công ty/thời gian/highlights), học vấn, ngôn ngữ.
 - Suy `total_years` và `seniority` từ tổng thời gian + phạm vi trách nhiệm.
 

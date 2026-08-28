@@ -1,28 +1,32 @@
-# JobMatching — Claude Code plugin
+# JobMatching — plugin dual-manifest (Claude Code + Codex)
 
-Repo này **là một Claude Code plugin marketplace**: tìm và xếp hạng job phù hợp nhất với **target**
-và **CV** của ứng viên, song ngữ Việt–Anh. Lấy dữ liệu job qua **Search Engine + web scraping**
-(tool `WebSearch` / `WebFetch` của Claude Code — không cần API key) và tùy chọn **In-Group Facebook
-Crawler** chạy cục bộ qua Playwright.
+Thư mục `job-matching-plugin/` **là một plugin dùng được ở CẢ Claude Code lẫn Codex**: tìm và xếp
+hạng job phù hợp nhất với **target** và **CV** của ứng viên, song ngữ Việt–Anh. Lấy dữ liệu job qua
+**Search Engine + web scraping** (tool `WebSearch`/`WebFetch` trên Claude, `web_search` trên Codex —
+không cần API key) và tùy chọn **In-Group Facebook Crawler** chạy cục bộ qua Playwright.
 
 ## Bố cục repo
 
-- `.claude-plugin/marketplace.json` — marketplace, trỏ tới plugin `./job-matching-plugin`.
-- `job-matching-plugin/` — **nguồn chân lý duy nhất** của plugin:
-  - `.claude-plugin/plugin.json` — manifest plugin (khai báo `mcpServers: ./.mcp.json`).
-  - `.mcp.json` — khai báo local MCP server `facebook_crawler`.
-  - `commands/find-jobs.md` — slash command `/find-jobs` điều phối full pipeline.
-  - `skills/*/SKILL.md` — `candidate-intake`, `scoring-rubric`, `job-schema`,
+- `.claude-plugin/marketplace.json` (gốc repo) — marketplace Claude, trỏ tới plugin `./job-matching-plugin`.
+- `job-matching-plugin/` — **nguồn chân lý duy nhất** của plugin (dùng chung cho cả hai hệ):
+  - `.claude-plugin/plugin.json` — manifest Claude (khai báo `mcpServers: ./.mcp.json`).
+  - `.codex-plugin/plugin.json` — manifest Codex (khai báo `skills` + `mcpServers: ./.codex-plugin/mcp.json`).
+  - `.mcp.json` — MCP server `facebook_crawler` cho Claude (python + `${CLAUDE_PLUGIN_ROOT}`).
+  - `.codex-plugin/mcp.json` — MCP server `facebook_crawler` cho Codex (launcher `scripts/launch_facebook_crawler_mcp.cmd`).
+  - `CLAUDE.md` / `AGENTS.md` — hướng dẫn cho Claude / Codex.
+  - `commands/find-jobs.md` — slash command `/find-jobs` (Claude). Trên Codex dùng `skills/find-jobs/SKILL.md`.
+  - `skills/*/SKILL.md` — dùng chung: `find-jobs`, `candidate-intake`, `scoring-rubric`, `job-schema`,
     `bilingual-normalization`, `fit-analyzer`, `application-assistant`, `fb-crawler`.
-  - `agents/*.md` — subagent `job-collector`, `job-matcher` (chạy context riêng cho bước tốn token).
+  - `agents/*.md` (Claude) **và** `agents/*.toml` (Codex) — subagent `job-collector`, `job-matcher`.
   - `schemas/*.json` — data contracts profile / job / match.
   - `scripts/fb_crawler.py` — script Playwright In-Group Search & Profile Target Filter.
+  - `scripts/launch_facebook_crawler_mcp.cmd` — launcher MCP cho Codex (Windows).
   - `mcp/facebook_crawler_server.py` — stdio MCP server (stdlib-only) bọc crawler thành tool `run_facebook_crawler`.
   - `tests/*.py` — unit test cho crawler logic, MCP server và tính toàn vẹn plugin.
 - `data/` — dữ liệu chạy trong thư mục làm việc (được gitignore phần nhạy cảm).
 
-> Không tạo bản sao skill/agent thứ hai ở gốc repo. Trước đây từng có `.claude/`, `schemas/`,
-> `scripts/` ở gốc bị trôi lệch (drift) so với plugin — đã gỡ bỏ để tránh hai nguồn.
+> Không tạo bản sao skill/agent thứ hai ở gốc repo. Skill dùng chung viết trung lập tên tool
+> (`WebSearch`/`WebFetch` cho Claude, `web_search` cho Codex) để một nguồn phục vụ cả hai hệ.
 
 ## Bật web search & Playwright
 

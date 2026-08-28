@@ -31,22 +31,22 @@ Chỉ dùng khi MCP tool không khả dụng. Chạy bằng **tool Bash** với 
 
 ### 1. Quét theo danh sách link group do người dùng cung cấp:
 ```bash
-python "${CLAUDE_PLUGIN_ROOT}/scripts/fb_crawler.py" --groups "<link-group-1>, <link-group-2>" --limit 10
+python "./scripts/fb_crawler.py" --groups "<link-group-1>, <link-group-2>" --limit 10
 ```
 
 ### 2. Quét theo target Profile và config mặc định:
 ```bash
-python "${CLAUDE_PLUGIN_ROOT}/scripts/fb_crawler.py" --profile data/profiles/nguyen-trong-hieu.json --limit 10
+python "./scripts/fb_crawler.py" --profile data/profiles/nguyen-trong-hieu.json --limit 10
 ```
 
 ### 3. Chỉ mở trình duyệt để đăng nhập lưu session (nếu chưa đăng nhập):
 ```bash
-python "${CLAUDE_PLUGIN_ROOT}/scripts/fb_crawler.py" --login-only
+python "./scripts/fb_crawler.py" --login-only
 ```
 
 ### 4. Chạy ngầm (headless) khi đã có session:
 ```bash
-python "${CLAUDE_PLUGIN_ROOT}/scripts/fb_crawler.py" --headless --limit 10
+python "./scripts/fb_crawler.py" --headless --limit 10
 ```
 
 ## Các cờ (flags) quan trọng

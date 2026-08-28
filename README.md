@@ -1,22 +1,36 @@
 # JobMatching
 
-**Claude Code plugin marketplace** giúp tìm và xếp hạng các job phù hợp nhất với **target** và **CV** của ứng viên. Xử lý song ngữ Việt–Anh, lấy dữ liệu job qua Search Engine + Web scraping (không cần API key) và tùy chọn cào Facebook Groups công khai.
+Plugin **dùng được ở CẢ Claude Code lẫn Codex** (dual-manifest) giúp tìm và xếp hạng các job phù hợp nhất với **target** và **CV** của ứng viên. Xử lý song ngữ Việt–Anh, lấy dữ liệu job qua Search Engine + Web scraping (không cần API key) và tùy chọn cào Facebook Groups công khai.
 
-- Marketplace: [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json)
-- Plugin (nguồn chân lý): [`job-matching-plugin/`](job-matching-plugin/) — xem [README plugin](job-matching-plugin/README.md)
-- Hướng dẫn cho người phát triển repo: [`CLAUDE.md`](CLAUDE.md)
+- Plugin (nguồn chân lý duy nhất): [`job-matching-plugin/`](job-matching-plugin/) — chứa cả `.claude-plugin/` và `.codex-plugin/`, dùng chung `skills/`, `schemas/`, `scripts/`, `mcp/`.
+- Marketplace Claude: [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json)
+- Hướng dẫn: [`CLAUDE.md`](job-matching-plugin/CLAUDE.md) (Claude) · [`AGENTS.md`](job-matching-plugin/AGENTS.md) (Codex)
 
-## Cài đặt nhanh
+## Cài đặt
+
+### Cách 1 — Tải package (.zip)
+
+Build 1 file zip tải-về-là-dùng cho cả hai hệ:
+
+```bash
+powershell -ExecutionPolicy Bypass -File .\build-release.ps1   # Windows
+```
+```bash
+bash build-release.sh                                          # macOS/Linux
+```
+
+Ra `dist/job-matching-v<version>.zip`. Giải nén rồi:
+- **Claude Code**: `/plugin marketplace add <thư-mục-giải-nén>` → `/plugin install job-matching`
+- **Codex**: trỏ plugin tới `<thư-mục-giải-nén>/job-matching-plugin` (đọc `.codex-plugin/plugin.json`). Bật web search: `codex --search` hoặc `tools.web_search = true`.
+
+### Cách 2 — Từ git repo (Claude)
 
 ```bash
 /plugin marketplace add <đường-dẫn-hoặc-git-repo-này>
-```
-
-```bash
 /plugin install job-matching
 ```
 
-Sau đó chạy full pipeline: `/find-jobs D:\path\to\CV.pdf`
+Sau đó chạy full pipeline — Claude: `/find-jobs D:\path\to\CV.pdf` · Codex: gọi skill `find-jobs` với đường dẫn CV.
 
 ## Pipeline
 

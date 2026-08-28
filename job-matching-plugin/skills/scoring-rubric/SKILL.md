@@ -5,7 +5,7 @@ description: Công thức chấm điểm mức độ khớp giữa 1 job và pro
 
 # Scoring Rubric — chấm điểm khớp job ↔ profile
 
-Đây là "bộ não" quyết định chất lượng match. Kết quả tuân theo `${CLAUDE_PLUGIN_ROOT}/schemas/match.schema.json`.
+Đây là "bộ não" quyết định chất lượng match. Kết quả tuân theo `./schemas/match.schema.json`.
 
 ## Nguyên tắc
 
@@ -103,6 +103,6 @@ Map sang `recommendation`:
 
 ## Đầu ra
 
-Trả về đúng `${CLAUDE_PLUGIN_ROOT}/schemas/match.schema.json`: overall_score, recommendation, dimension_scores, weights_used, matched_skills, missing_must_have, gaps[], dealbreaker_violations[], rationale, confidence.
+Trả về đúng `./schemas/match.schema.json`: overall_score, recommendation, dimension_scores, weights_used, matched_skills, missing_must_have, gaps[], dealbreaker_violations[], rationale, confidence.
 
 `rationale` viết ngắn, cụ thể, song ngữ nếu cần — nêu 1–2 lý do mạnh nhất và 1 gap lớn nhất.

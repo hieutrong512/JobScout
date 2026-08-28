@@ -43,6 +43,9 @@ venv/
 env/
 *.egg-info/
 
+# ===== Scratch / tooling output =====
+_bmad-output/
+
 # ===== Logs & temp =====
 *.log
 logs/
