@@ -54,16 +54,36 @@ application-assistant (skill, tùy chọn) ← tailor CV/cover letter & tin nh�
 | `scoring-rubric` | Skill | Công thức tính điểm (nền tảng) |
 | `job-schema` | Skill | Schema chuẩn cho job (kèm contact & FB posts) |
 | `bilingual-normalization` | Skill | Chuẩn hóa skill/chức danh/lương Việt–Anh & văn phong MXH |
+| `fb-crawler` | Skill | Cào bài tuyển dụng từ Facebook Group công khai qua Playwright |
 
 ## Trọng số chấm điểm (mặc định)
 
 skills 35% · seniority 20% · domain 15% · compensation 15% · location 5% · culture 5%
 → Ứng viên override được qua `target.priorities` trong profile.
 
+## Yêu cầu môi trường (nguồn Facebook)
+
+Nguồn Facebook chạy qua **MCP tool `run_facebook_crawler`** (khai báo trong `.mcp.json`, bọc `scripts/fb_crawler.py`). Chỉ cần khi bật nguồn này:
+
+```bash
+pip install playwright && playwright install chromium
+```
+
+- MCP server (`mcp/facebook_crawler_server.py`) chỉ dùng thư viện chuẩn, khởi động dưới bất kỳ Python nào; nó chạy crawler bằng `JOB_MATCHING_PYTHON` (nếu đặt) hoặc chính Python của server. **Python đó phải có Playwright.** Nếu `python` mặc định thiếu Playwright, đặt `JOB_MATCHING_PYTHON` trỏ tới python có Playwright rồi mở lại phiên Claude.
+- `WebSearch` / `WebFetch` cho Job boards là tool sẵn có của Claude Code — không cần cấu hình.
+
 ## Dữ liệu
 
 - **Định nghĩa** (agents/skills/schemas) nằm trong plugin.
 - **Dữ liệu chạy** (`data/profiles`, `data/jobs`, `data/results`) ghi trong thư mục làm việc của người dùng, không nằm trong plugin.
+
+## Kiểm tra
+
+```bash
+cd job-matching-plugin
+python -m unittest discover -s tests -v
+python -m compileall -q -f scripts mcp tests
+```
 
 ## Ghi chú vận hành
 

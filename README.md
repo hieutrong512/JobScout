@@ -1,6 +1,22 @@
 # JobMatching
 
-Bộ agent/skill (Claude Code) giúp tìm và xếp hạng các job phù hợp nhất với **target** và **CV** của ứng viên. Xử lý song ngữ Việt–Anh, lấy dữ liệu job qua Search Engine + Web scraping (không cần API key).
+**Claude Code plugin marketplace** giúp tìm và xếp hạng các job phù hợp nhất với **target** và **CV** của ứng viên. Xử lý song ngữ Việt–Anh, lấy dữ liệu job qua Search Engine + Web scraping (không cần API key) và tùy chọn cào Facebook Groups công khai.
+
+- Marketplace: [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json)
+- Plugin (nguồn chân lý): [`job-matching-plugin/`](job-matching-plugin/) — xem [README plugin](job-matching-plugin/README.md)
+- Hướng dẫn cho người phát triển repo: [`CLAUDE.md`](CLAUDE.md)
+
+## Cài đặt nhanh
+
+```bash
+/plugin marketplace add <đường-dẫn-hoặc-git-repo-này>
+```
+
+```bash
+/plugin install job-matching
+```
+
+Sau đó chạy full pipeline: `/find-jobs D:\path\to\CV.pdf`
 
 ## Pipeline
 
@@ -38,7 +54,7 @@ CV + Target
 
 ## Data contracts
 
-Mọi thành phần trao đổi qua JSON theo `schemas/`:
+Mọi thành phần trao đổi qua JSON theo `job-matching-plugin/schemas/`:
 - `profile.schema.json` — hồ sơ ứng viên (CV + target)
 - `job.schema.json` — tin tuyển dụng đã chuẩn hóa (kèm contact info)
 - `match.schema.json` — kết quả chấm điểm từng job

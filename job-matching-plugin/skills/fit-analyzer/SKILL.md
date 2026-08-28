@@ -8,9 +8,13 @@ description: Với các job trong shortlist, giải thích mức độ phù hợ
 Đầu vào: `profile.json` + `data/results/<run-id>.shortlist.json` (mảng MatchResult + job tương ứng).
 Đầu ra: `data/results/<run-id>.fit_report.md`.
 
+## Phạm vi báo cáo (QUAN TRỌNG)
+
+Phân tích chi tiết **TẤT CẢ job trong shortlist**, không rút gọn còn top 3. Nếu shortlist có nhiều hơn **20** job thì phân tích chi tiết 20 job điểm cao nhất và vẫn liệt kê đủ phần còn lại trong bảng xếp hạng. Có thể thêm mục "🏆 Ưu tiên apply ngay" (2–3 job) ở đầu như phần tóm tắt, nhưng **phần thân báo cáo vẫn phải có block chi tiết cho từng job** (không bỏ job nào).
+
 ## Nội dung báo cáo
 
-Phân tích chi tiết cho **top N** (mặc định **20**, hoặc toàn bộ nếu ít hơn) job có điểm cao nhất, mỗi job trình bày:
+Với **mỗi** job (theo thứ tự điểm giảm dần), trình bày:
 
 1. **Header**: `#N. Title @ Company` — overall_score, recommendation, **link nộp CV / bài post (url)**, lương, location/remote, hạn nộp (nếu có).
    - Nếu là tin từ Facebook / MXH: hiển thị rõ **kênh liên hệ** (Zalo, Email, Facebook Author, Telegram, hoặc "Inbox FB nhận JD").

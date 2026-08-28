@@ -11,8 +11,23 @@ Cào bài tuyển dụng AI/CV/LLM từ các Facebook Group mục tiêu, hỗ tr
 - Python 3.9+
 - `pip install playwright`
 - `playwright install chromium`
+- **Cần MÁY LOCAL có màn hình cho lần đăng nhập đầu tiên.** Cloud container / môi trường headless (không có `DISPLAY`) **không mở được** trình duyệt để nhập mật khẩu + 2FA → crawler dừng sớm với `NoDisplayError`. Trong trường hợp đó: đăng nhập một lần ở máy local để tạo `data/.auth/facebook_state.json`, rồi có thể **copy** file session sang môi trường cloud và chạy `--headless` (session gắn IP/thiết bị — dùng từ IP lạ có thể bị Facebook chặn). Nếu không có session, đây là lý do **hợp lệ** để bỏ nguồn Facebook và chỉ dùng job boards.
 
 ## Cách chạy
+
+### Cách 1 (khuyến nghị) — MCP tool `run_facebook_crawler`
+Gọi tool `run_facebook_crawler` (server `facebook_crawler` đi kèm plugin). Tham số chính:
+- `profile_path` — profile JSON để suy từ khóa & lọc theo target.
+- `groups` — danh sách URL Facebook Group công khai (hoặc `config_path` trỏ tới file đã lưu).
+- `queries`, `limit`, `scrolls` — tùy chọn. `workspace_root` bỏ trống = thư mục hiện tại.
+- `login_only: true` — chỉ mở Chromium để đăng nhập & lưu session.
+
+Tool tự lo đăng nhập (lần đầu mở Chromium; **không tự nhập mật khẩu hộ người dùng**), chờ tới khi xong, trả về `output_path`, `session_path`, `job_count`, `status`. Đọc JSON tại `output_path`.
+
+> **Đây là NGUỒN Facebook duy nhất — `WebSearch`/`WebFetch` KHÔNG thay thế được** (không đọc được feed trong group). Facebook load chậm là bình thường; **đợi tool trả về**, không bỏ giữa chừng. Chỉ dừng khi tool trả `isError`/`status: error`, và khi đó nói rõ lỗi cho người dùng.
+
+### Cách 2 (fallback / chẩn đoán) — Bash trực tiếp
+Chỉ dùng khi MCP tool không khả dụng. Chạy bằng **tool Bash** với **timeout = 600000ms** (script Playwright, không dùng WebFetch; cào nhiều group → `run_in_background`), rồi Read `data/jobs/raw_fb_posts_<date>.json`.
 
 ### 1. Quét theo danh sách link group do người dùng cung cấp:
 ```bash
@@ -35,6 +50,7 @@ python "${CLAUDE_PLUGIN_ROOT}/scripts/fb_crawler.py" --headless --limit 10
 ```
 
 ## Các cờ (flags) quan trọng
+- `--workspace-root "<path>"`: Ghim thư mục làm việc chứa `data/` (mặc định: thư mục hiện tại). Dùng khi cần chắc chắn `data/` không ghi nhầm vào thư mục cài plugin.
 - `--groups "<urls>"`: Danh sách URL các Facebook Group (cách nhau bởi dấu phẩy).
 - `--profile "<path>"`: Đường dẫn file profile JSON để tự động lấy từ khóa AI/CV/LLM và lọc theo địa điểm HCM/Remote.
 - `--queries "AI Engineer,LLM"`: Tùy chỉnh danh sách từ khóa tìm kiếm trong group.

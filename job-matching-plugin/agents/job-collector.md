@@ -1,7 +1,7 @@
 ---
 name: job-collector
 description: Thu thập tin tuyển dụng từ Search Engine + Web scraping dựa trên profile ứng viên, chuẩn hóa về job.schema.json. Dùng sau khi có profile.json và cần tìm job. Chạy trong context riêng vì tốn nhiều lượt search/fetch.
-tools: WebSearch, WebFetch, Read, Write, Glob
+tools: mcp__plugin_job-matching_facebook_crawler__run_facebook_crawler, Bash, WebSearch, WebFetch, Read, Write, Glob
 model: sonnet
 ---
 
@@ -17,11 +17,15 @@ Nhiệm vụ: từ `profile.json`, tìm và chuẩn hóa danh sách job → `dat
 - **Hỏi xác nhận, cảnh báo minh bạch & nhận link group động**:
   - Đảm bảo người dùng đã đồng ý quét nguồn Facebook và đã cung cấp danh sách link các Group Facebook mục tiêu.
   - Agent lưu danh sách link này vào `data/config/facebook_groups.json` (hoặc truyền qua `--groups "<urls>"`).
-- Nếu người dùng đồng ý:
-  - Chạy script: `python "${CLAUDE_PLUGIN_ROOT}/scripts/fb_crawler.py" --profile data/profiles/<profile>.json --config data/config/facebook_groups.json` (hoặc `python scripts/fb_crawler.py` nếu chạy local repo).
-  - Script sẽ tự động tìm kiếm các từ khóa mục tiêu (`AI Engineer`, `Computer Vision`, `LLM`, `YOLO`) trực tiếp trong từng Group được cung cấp, bóc tách permalink, tác giả, và thông tin liên hệ.
-  - Kết quả cào được lưu tại `data/jobs/raw_fb_posts_<date>.json`.
-  - Đọc file này để trích xuất các bài tuyển dụng Facebook vào pipeline.
+- **Ưu tiên**: nếu luồng chính (`/find-jobs` Bước 2a) đã cào và đưa cho bạn đường dẫn `raw_fb_posts_<date>.json` → chỉ cần **Read** file đó, không chạy lại crawler.
+- Nếu phải tự chạy crawler:
+  - **Cách 1 (khuyến nghị)** — gọi **MCP tool `run_facebook_crawler`** (server `facebook_crawler`): truyền `profile_path`, `groups` (hoặc `config_path`), tùy chọn `limit`/`scrolls`/`queries`; bỏ trống `workspace_root`. Tool tự đăng nhập (mở Chromium lần đầu), chờ tới khi xong, trả `output_path` + `job_count`. Đọc `output_path`.
+  - **Cách 2 (fallback, chỉ khi không có MCP tool)** — Bash: `python "${CLAUDE_PLUGIN_ROOT}/scripts/fb_crawler.py" --profile data/profiles/<profile>.json --config data/config/facebook_groups.json` với **timeout = 600000ms** (nhiều group → `run_in_background`), rồi Read `data/jobs/raw_fb_posts_<date>.json`.
+  - Bước đăng nhập cần người dùng xem màn hình → nếu không chắc, để luồng chính làm trước; ở đây chỉ chạy khi session đã tồn tại.
+- **Quy tắc bắt buộc**:
+  - Facebook load chậm là **bình thường** — crawler tự cuộn/tự chờ; **ĐỢI tool/script trả về**, **KHÔNG** tự dừng giữa chừng.
+  - **KHÔNG** thay nguồn Facebook bằng `WebSearch`/`WebFetch` — hai nguồn khác nhau, WebSearch không đọc được feed trong group. Chỉ bỏ Facebook khi crawler **thực sự lỗi/timeout**, và phải **nói thẳng lỗi**, không âm thầm đổi nguồn.
+  - Nếu crawler báo lỗi (thiếu Playwright, group riêng tư, đăng nhập thất bại…): nêu rõ lỗi, KHÔNG bịa job Facebook, vẫn tiếp tục Kênh 2.
 - Nếu người dùng không chọn Facebook: Bỏ qua kênh này và chỉ thu thập qua Kênh 2.
 
 #### Kênh 2: Job Boards truyền thống & Search Engine
