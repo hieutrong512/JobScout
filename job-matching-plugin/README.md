@@ -31,46 +31,38 @@ Hoặc gọi từng bước bằng ngôn ngữ tự nhiên (skill tự kích ho�
 ```
 CV + Target
    │  candidate-intake (skill)
-   ▼  → data/profiles/<slug>.json (kèm hỏi người dùng xác nhận bật nguồn Facebook)
-job-collector (subagent)        ← Job boards + Tùy chọn: In-Group Facebook Crawler (tối đa 20)
+   ▼  → data/profiles/<slug>.json
+job-collector (subagent)        ← Job boards (tối đa 20)
    ▼  → data/jobs/<run-id>.json
 job-matcher (subagent)          ← chấm điểm theo scoring-rubric
    ▼  → data/results/<run-id>.shortlist.json
-fit-analyzer (skill)            ← báo cáo fit/gap, mọi job có link nộp CV / bài post
+fit-analyzer (skill)            ← báo cáo fit/gap, mọi job có link nộp CV
    ▼  → data/results/<run-id>.fit_report.md
-application-assistant (skill, tùy chọn) ← tailor CV/cover letter & tin nhắn tiếp cận HR (Zalo/FB)
+application-assistant (skill, tùy chọn) ← tailor CV/cover letter & tin nhắn tiếp cận HR
 ```
 
 ## Thành phần
 
 | Thành phần | Loại | Vai trò |
 |---|---|---|
-| `find-jobs` | Command | Điều phối toàn bộ pipeline (hỏi bật nguồn Facebook minh bạch) |
+| `find-jobs` | Command | Điều phối toàn bộ pipeline |
 | `candidate-intake` | Skill | Parse CV + target → profile.json |
-| `job-collector` | Agent | Search + scrape từ Job boards (và FB Groups nếu được bật) → jobs.json |
+| `job-collector` | Agent | Search + scrape từ Job boards → jobs.json |
 | `job-matcher` | Agent | Chấm điểm & rank → shortlist.json |
-| `fit-analyzer` | Skill | Báo cáo fit/gap (link nộp CV / bài post cho mọi job) |
-| `application-assistant` | Skill | Tailor CV / cover letter / tin nhắn tiếp cận HR (Zalo/FB) |
+| `fit-analyzer` | Skill | Báo cáo fit/gap (link nộp CV cho mọi job) |
+| `application-assistant` | Skill | Tailor CV / cover letter / tin nhắn tiếp cận HR |
 | `scoring-rubric` | Skill | Công thức tính điểm (nền tảng) |
-| `job-schema` | Skill | Schema chuẩn cho job (kèm contact & FB posts) |
-| `bilingual-normalization` | Skill | Chuẩn hóa skill/chức danh/lương Việt–Anh & văn phong MXH |
-| `fb-crawler` | Skill | Cào bài tuyển dụng từ Facebook Group công khai qua Playwright |
+| `job-schema` | Skill | Schema chuẩn cho job (kèm contact) |
+| `bilingual-normalization` | Skill | Chuẩn hóa skill/chức danh/lương Việt–Anh |
 
 ## Trọng số chấm điểm (mặc định)
 
 skills 35% · seniority 20% · domain 15% · compensation 15% · location 5% · culture 5%
 → Ứng viên override được qua `target.priorities` trong profile.
 
-## Yêu cầu môi trường (nguồn Facebook)
+## Yêu cầu môi trường
 
-Nguồn Facebook chạy qua **MCP tool `run_facebook_crawler`** (khai báo trong `.mcp.json`, bọc `scripts/fb_crawler.py`). Chỉ cần khi bật nguồn này:
-
-```bash
-pip install playwright && playwright install chromium
-```
-
-- MCP server (`mcp/facebook_crawler_server.py`) chỉ dùng thư viện chuẩn, khởi động dưới bất kỳ Python nào; nó chạy crawler bằng `JOB_MATCHING_PYTHON` (nếu đặt) hoặc chính Python của server. **Python đó phải có Playwright.** Nếu `python` mặc định thiếu Playwright, đặt `JOB_MATCHING_PYTHON` trỏ tới python có Playwright rồi mở lại phiên Claude.
-- `WebSearch` / `WebFetch` cho Job boards là tool sẵn có của Claude Code — không cần cấu hình.
+`WebSearch` / `WebFetch` cho Job boards là tool sẵn có của Claude Code — không cần cấu hình.
 
 ## Dữ liệu
 
@@ -82,13 +74,11 @@ pip install playwright && playwright install chromium
 ```bash
 cd job-matching-plugin
 python -m unittest discover -s tests -v
-python -m compileall -q -f scripts mcp tests
+python -m compileall -q -f tests
 ```
 
 ## Ghi chú vận hành
 
-- **Tiêu chuẩn thu thập theo nguồn**:
-  - *Job boards truyền thống* (ITviec, TopCV, VietnamWorks, LinkedIn): Luôn được quét chính thống, chỉ giữ job xem được full JD và còn hạn.
-  - *Hội nhóm Facebook (Tùy chọn)*: Quét qua In-Group Search trực tiếp với từ khóa chuyên môn. Cần người dùng xác nhận bật và đăng nhập lấy session cookie (lưu bảo mật tại `data/.auth/`).
+- **Tiêu chuẩn thu thập**: Quét từ các trang tuyển dụng chính thống (ITviec, TopCV, VietnamWorks, LinkedIn), chỉ giữ job xem được full JD và còn hạn.
 - Giữ nguyên đơn vị lương gốc theo JD; chỉ quy đổi khi so sánh (tỉ giá $1 = 26.100 VND).
 - Tôn trọng robots.txt/ToS; không vượt anti-bot/CAPTCHA; không tự nộp hồ sơ / gửi tin nhắn thay người dùng.

@@ -21,15 +21,14 @@ description: Tùy chỉnh (tailor) nội dung CV và viết cover letter cho m�
 - Giọng văn phù hợp ngôn ngữ JD (vi/en/mixed). Ngắn gọn (~250–350 từ).
 - Cá nhân hóa theo company (tránh mẫu chung chung).
 
-## Tin nhắn tiếp cận trực tiếp HR (Zalo / Facebook Inbox / Comment)
+## Tin nhắn tiếp cận trực tiếp HR (Email / LinkedIn / Zalo)
 
-Dành cho tin tuyển dụng thu thập từ **Facebook Groups** (khi HR đăng bài ngắn câu tương tác):
+Khi JD có kênh liên hệ trực tiếp và ứng viên muốn chủ động tiếp cận HR:
 
-1. **Mẫu Direct Message (Zalo / FB Messenger)**:
-   > "Chào anh/chị [Tên HR/Recruiter], em thấy bài đăng tuyển [Tên vị trí] của anh/chị trên nhóm [Tên Group]. Em có [X năm] kinh nghiệm về [Top 2-3 kỹ năng khớp], từng làm [Dự án/Sản phẩm tiêu biểu]. Em rất quan tâm và muốn xin JD chi tiết để tìm hiểu thêm. Em xin gửi kèm link CV: [Link CV] để anh/chị tiện xem qua trước ạ. Cảm ơn anh/chị!"
+**Mẫu Direct Message / Email ngắn**:
+> "Chào anh/chị [Tên HR/Recruiter], em thấy tin tuyển [Tên vị trí] của [Công ty]. Em có [X năm] kinh nghiệm về [Top 2-3 kỹ năng khớp], từng làm [Dự án/Sản phẩm tiêu biểu]. Em rất quan tâm vị trí này. Em xin gửi kèm CV: [Link CV] để anh/chị tiện xem qua ạ. Cảm ơn anh/chị!"
 
-2. **Mẫu Comment dưới bài đăng Facebook**:
-   > "Dạ em chào anh/chị, em quan tâm vị trí này và đã gửi tin nhắn / email cho anh/chị kèm profile rồi ạ. Nhờ anh/chị check giúp em nhé, em cảm ơn!"
+Điều chỉnh giọng văn theo kênh (email trang trọng hơn, LinkedIn/Zalo ngắn gọn hơn).
 
 ## Ranh giới quan trọng
 

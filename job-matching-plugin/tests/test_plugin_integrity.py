@@ -23,33 +23,39 @@ class PluginIntegrityTests(unittest.TestCase):
         self.assertTrue(manifest["author"]["name"])
 
     def test_convention_directories_exist(self):
-        for component in ("skills", "agents", "commands", "schemas", "scripts", "mcp"):
+        for component in ("skills", "agents", "commands", "schemas"):
             path = PLUGIN_ROOT / component
             self.assertTrue(path.is_dir(), f"Thiếu thư mục thành phần: {component}")
 
     def test_all_json_files_are_valid(self):
-        json_paths = [
-            PLUGIN_ROOT / ".claude-plugin" / "plugin.json",
-            PLUGIN_ROOT / ".mcp.json",
-        ]
+        json_paths = [PLUGIN_ROOT / ".claude-plugin" / "plugin.json"]
         json_paths.extend((PLUGIN_ROOT / "schemas").glob("*.json"))
 
         for path in json_paths:
             with self.subTest(path=path.name):
                 json.loads(path.read_text(encoding="utf-8"))
 
-    def test_mcp_server_declared(self):
+    def test_no_mcp_server_declared(self):
+        # Nguồn Facebook (MCP server duy nhất) đã được gỡ — plugin không còn MCP server.
         manifest = json.loads((PLUGIN_ROOT / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))
-        self.assertEqual(manifest.get("mcpServers"), "./.mcp.json")
-        mcp = json.loads((PLUGIN_ROOT / ".mcp.json").read_text(encoding="utf-8"))
-        server = mcp["mcpServers"]["facebook_crawler"]
-        self.assertEqual(server.get("type"), "stdio")
-        self.assertIn("${CLAUDE_PLUGIN_ROOT}", " ".join(server["args"]))
-        self.assertEqual(
-            server.get("env", {}).get("JOB_MATCHING_WORKSPACE_ROOT"),
-            "${CLAUDE_PROJECT_DIR}",
-        )
-        self.assertTrue((PLUGIN_ROOT / "mcp" / "facebook_crawler_server.py").is_file())
+        self.assertNotIn("mcpServers", manifest)
+        self.assertFalse((PLUGIN_ROOT / ".mcp.json").exists())
+        self.assertFalse((PLUGIN_ROOT / "mcp").exists())
+        self.assertFalse((PLUGIN_ROOT / "scripts").exists())
+
+    def test_no_facebook_references_remain(self):
+        self.assertFalse((PLUGIN_ROOT / "skills" / "fb-crawler").exists())
+        offenders = []
+        for path in PLUGIN_ROOT.rglob("*"):
+            if not path.is_file():
+                continue
+            if "__pycache__" in path.parts or path.suffix in {".pyc"}:
+                continue
+            if path.name == "test_plugin_integrity.py":
+                continue
+            if "facebook" in path.read_text(encoding="utf-8", errors="ignore").casefold():
+                offenders.append(str(path.relative_to(PLUGIN_ROOT)))
+        self.assertEqual(offenders, [], f"Vẫn còn tham chiếu Facebook: {offenders}")
 
     def test_marketplace_and_plugin_versions_match(self):
         manifest = json.loads((PLUGIN_ROOT / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))
@@ -58,16 +64,14 @@ class PluginIntegrityTests(unittest.TestCase):
         )
         entry = next(plugin for plugin in marketplace["plugins"] if plugin["name"] == manifest["name"])
 
-        self.assertEqual(manifest["version"], "1.1.0")
+        self.assertEqual(manifest["version"], "1.2.0")
         self.assertEqual(entry["version"], manifest["version"])
         self.assertEqual(marketplace["metadata"]["version"], manifest["version"])
 
-    def test_job_collector_grants_plugin_namespaced_facebook_tool(self):
+    def test_job_collector_uses_web_search_tools(self):
         collector = (PLUGIN_ROOT / "agents" / "job-collector.md").read_text(encoding="utf-8")
-        self.assertIn(
-            "tools: mcp__plugin_job-matching_facebook_crawler__run_facebook_crawler,",
-            collector,
-        )
+        self.assertIn("WebSearch", collector)
+        self.assertNotIn("run_facebook_crawler", collector)
 
     def test_schemas_are_present(self):
         for name in ("profile.schema.json", "job.schema.json", "match.schema.json"):
@@ -109,17 +113,9 @@ class PluginIntegrityTests(unittest.TestCase):
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
 
         self.assertEqual(manifest["name"], "job-matching")
-        self.assertEqual(manifest["version"], "1.1.0")
+        self.assertEqual(manifest["version"], "1.2.0")
         self.assertEqual(manifest.get("skills"), "./skills/")
-        server = manifest["mcpServers"]["facebook_crawler"]
-        self.assertEqual(server["command"], "python")
-        self.assertIn("mcp/facebook_crawler_server.py", " ".join(server["args"]))
-
-    def test_codex_mcp_server_declared(self):
-        self.assertFalse((PLUGIN_ROOT / "codex.mcp.json").exists())
-        self.assertFalse((PLUGIN_ROOT / ".codex-plugin" / "mcp.json").exists())
-        launcher = PLUGIN_ROOT / "scripts" / "launch_facebook_crawler_mcp.cmd"
-        self.assertTrue(launcher.is_file(), "Thiếu launcher MCP cho Codex")
+        self.assertNotIn("mcpServers", manifest)
 
     def test_claude_and_codex_manifest_names_match(self):
         claude = json.loads((PLUGIN_ROOT / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))
@@ -142,14 +138,10 @@ class PluginIntegrityTests(unittest.TestCase):
         self.assertIn("policy", entry)
         self.assertTrue(entry["category"])
 
-    def test_launchers_do_not_require_optional_playwright_at_startup(self):
-        launcher = (PLUGIN_ROOT / "scripts" / "launch_facebook_crawler_mcp.cmd").read_text(encoding="utf-8")
-        self.assertNotIn("import playwright", launcher)
-        self.assertTrue((PLUGIN_ROOT / "scripts" / "launch_facebook_crawler_mcp.sh").is_file())
-
     def test_command_has_no_developer_file_uri(self):
         command = (PLUGIN_ROOT / "commands" / "find-jobs.md").read_text(encoding="utf-8")
         self.assertNotIn("file:///", command.casefold())
+
     def test_shared_skills_are_plugin_root_relative(self):
         # Skill dùng chung không được hardcode ${CLAUDE_PLUGIN_ROOT} (Codex không expand được).
         offenders = []

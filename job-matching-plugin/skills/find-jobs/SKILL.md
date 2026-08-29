@@ -22,19 +22,13 @@ nếu chưa có.
 - Nếu là tên profile đã tồn tại → dùng lại, hỏi có cập nhật target không.
 - Thu thập/xác nhận target: vai trò, cấp bậc, địa điểm/remote, lương, priorities (→ trọng số), dealbreakers.
 - Tóm tắt cho người dùng xác nhận.
-- **Tùy chọn nguồn Facebook (Minh bạch & Động)**:
-  - Hỏi người dùng: *"Bạn có muốn quét thêm tin tuyển dụng từ các Hội nhóm Facebook không?"*
-  - *(Cảnh báo minh bạch: Nếu chọn Có và chưa có session, trình duyệt sẽ tự động mở lên để bạn đăng nhập Facebook lấy cookie session — được lưu bảo mật cục bộ tại `data/.auth/`, không bao giờ commit lên Git).*
-  - **Nếu người dùng chọn CÓ**: Yêu cầu người dùng **gửi danh sách link các Group Facebook công khai** mà họ muốn quét (ví dụ: `https://facebook.com/groups/pythonvietnam`, `https://facebook.com/groups/1407434203194440`...).
-  - Agent tự động ghi danh sách link này vào `data/config/facebook_groups.json`.
 
 ## Bước 2 — Collect → data/jobs/<run-id>.json
 Spawn một subagent context riêng và yêu cầu nó áp skill **`job-collector`**; không phụ thuộc custom
 agent cài ngoài plugin.
 - Truyền đường dẫn `profile.json`, `<run-id>` và output `data/jobs/<run-id>.json`.
-- **Nguồn Job Boards**: Luôn quét từ ITviec, TopCV, VietnamWorks, LinkedIn...
-- **Nguồn Facebook Groups (Nếu người dùng đồng ý & cung cấp link ở Bước 1)**: Gọi tool MCP local `run_facebook_crawler` của server `facebook_crawler`; truyền `workspace_root` tuyệt đối, profile, config, groups và queries. Đọc file JSON tại `output_path` tool trả về. Không chạy Python/Playwright trực tiếp trong sandbox và không fallback sang shell nếu MCP lỗi.
-- Giữ job thỏa mãn tiêu chuẩn: Job board cần full JD; Facebook post chỉ cần Title + Vị trí/Tech stack + Kênh liên hệ/Link bài viết. Tối đa 20 job hợp lệ.
+- **Nguồn Job Boards**: Quét từ ITviec, TopCV, VietnamWorks, LinkedIn...
+- Giữ job thỏa mãn tiêu chuẩn: chỉ giữ job xem được full JD & còn hạn. Tối đa 20 job hợp lệ.
 
 ## Bước 3 — Match → data/results/<run-id>.shortlist.json
 Spawn một subagent context riêng và yêu cầu nó áp skill **`job-matcher`** (chấm điểm bulk).

@@ -31,20 +31,13 @@ Mục tiêu: mọi so khớp diễn ra trên **canonical name** thống nhất, 
 ## Lương — giữ nguyên gốc, chỉ quy đổi khi cần so sánh
 
 - **Luôn giữ nguyên đơn vị & giá trị gốc** trong `job.salary` (currency đúng như JD). Ví dụ JD ghi "$1000" → lưu USD 1000; ghi "26 triệu" → lưu VND 26,000,000. Không tự đổi khi lưu trữ hay hiển thị.
-- Đơn vị Việt & văn phong MXH:
-  - "15 triệu"/"15tr"/"15M"/"15 củ" → 15,000,000 VND.
+- Đơn vị Việt:
+  - "15 triệu"/"15tr"/"15M" → 15,000,000 VND.
   - "15-20 triệu"/"15-20M" → min 15tr, max 20tr.
-  - "2x triệu"/"2x tr" → min: 20,000,000 VND, max: 29,000,000 VND.
-  - "3x nhỏ" → min: 30,000,000 VND, max: 34,000,000 VND; "3x to / 3x lớn" → min: 35,000,000 VND, max: 39,000,000 VND.
   - "Gross" / "Net" → parse giá trị số bình thường (ghi chú trong description nếu cần).
 - "Thỏa thuận"/"Cạnh tranh"/"Negotiable"/"Deal" → không set số, `negotiable=true`, currency=unknown.
 - USD: "$1500"/"1500 USD" → USD. "Up to $2000"/"Upto $2k" → max=2000, currency=USD.
 - **Chỉ khi cần so sánh** (chấm điểm compensation, so hai job khác đơn vị): quy đổi tạm về VND/tháng bằng tỉ giá cố định **$1 = 26,100 VND**; year→month chia 12. Giá trị quy đổi này chỉ dùng nội bộ lúc tính toán, KHÔNG ghi đè giá trị gốc.
-
-## Thuật ngữ tuyển dụng MXH / Facebook
-- "Tìm đồng đội" / "Tuyển gấp" / "Hiring" → Tin tuyển dụng.
-- "Inbox / Inb / DM / Chấm (.) / Ping" → Hình thức nhận JD hoặc ứng tuyển qua tin nhắn trực tiếp.
-- "Client bên em" / "Khách hàng US/Sing" / "Cty Product Q1" → Tin tuyển qua Headhunter hoặc ẩn danh công ty.
 
 ## Nguyên tắc
 

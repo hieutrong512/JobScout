@@ -12,24 +12,22 @@
     "company": { "type": "string" },
     "location": { "type": "string" },
     "remote": { "type": "string", "enum": ["onsite", "hybrid", "remote", "unknown"], "default": "unknown" },
-    "url": { "type": "string", "description": "Link bài đăng / link JD gốc" },
-    "source": { "type": "string", "description": "vd 'itviec', 'topcv', 'vietnamworks', 'linkedin', 'facebook_group', 'facebook', 'google'" },
+    "url": { "type": "string", "description": "Link trang tuyển dụng / link JD gốc" },
+    "source": { "type": "string", "description": "vd 'itviec', 'topcv', 'vietnamworks', 'linkedin', 'careerviet', 'google'" },
     "posted_date": { "type": "string", "description": "YYYY-MM-DD nếu có" },
     "application_deadline": { "type": "string", "description": "YYYY-MM-DD hạn nộp nếu JD có ghi; job chỉ được giữ khi hạn >= ngày hiện tại" },
     "employment_type": { "type": "string", "enum": ["full-time", "part-time", "contract", "internship", "unknown"], "default": "unknown" },
     "language": { "type": "string", "enum": ["vi", "en", "mixed"], "default": "mixed" },
-    "description": { "type": "string", "description": "JD gốc hoặc nội dung bài post (rút gọn nếu quá dài)" },
+    "description": { "type": "string", "description": "JD gốc (rút gọn nếu quá dài)" },
     "contact": {
       "type": "object",
-      "description": "Thông tin liên hệ ứng tuyển trực tiếp (đặc biệt quan trọng với nguồn Facebook/mạng xã hội)",
+      "description": "Thông tin liên hệ ứng tuyển trực tiếp nếu JD có",
       "properties": {
         "email": { "type": "string" },
         "phone": { "type": "string" },
         "zalo": { "type": "string" },
-        "telegram": { "type": "string" },
-        "facebook_author": { "type": "string", "description": "Tên hoặc link profile người đăng post" },
         "form_url": { "type": "string", "description": "Google Form / Typeform link nếu có" },
-        "how_to_apply": { "type": "string", "description": "Hướng dẫn ứng tuyển ngắn: vd 'Inbox FB/Zalo nhận JD', 'Gửi CV qua email'" }
+        "how_to_apply": { "type": "string", "description": "Hướng dẫn ứng tuyển ngắn: vd 'Gửi CV qua email', 'Apply qua link'" }
       }
     },
     "requirements": {
@@ -55,6 +53,6 @@
     "industry": { "type": "string" },
     "company_size": { "type": "string", "enum": ["startup", "sme", "enterprise", "unknown"], "default": "unknown" },
     "collected_at": { "type": "string", "description": "ISO timestamp lúc thu thập" },
-    "extraction_confidence": { "type": "number", "description": "0-1, độ tin cậy khi parse JD (0.5-0.7 cho bài post ngắn trên Facebook)" }
+    "extraction_confidence": { "type": "number", "description": "0-1, độ tin cậy khi parse JD (0.8-1.0 khi đọc được full JD)" }
   }
 }

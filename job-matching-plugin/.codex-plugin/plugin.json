@@ -1,24 +1,18 @@
 {
   "name": "job-matching",
-  "version": "1.1.0",
-  "description": "Tìm và xếp hạng việc làm phù hợp với mục tiêu nghề nghiệp và CV song ngữ Việt–Anh, bao gồm crawler Facebook chạy cục bộ qua MCP.",
+  "version": "1.2.0",
+  "description": "Tìm và xếp hạng việc làm phù hợp với mục tiêu nghề nghiệp và CV song ngữ Việt–Anh, thu thập job từ web search.",
   "author": {"name": "Nguyen Trong Hieu", "email": "hieutrong512@gmail.com"},
-  "keywords": ["jobs", "career", "cv", "facebook", "vietnam"],
+  "keywords": ["jobs", "career", "cv", "vietnam"],
   "skills": "./skills/",
-  "mcpServers": {
-    "facebook_crawler": {
-      "command": "python",
-      "args": ["mcp/facebook_crawler_server.py"]
-    }
-  },
   "interface": {
     "displayName": "JobMatching",
     "shortDescription": "Tìm và xếp hạng việc làm phù hợp từ CV",
-    "longDescription": "Pipeline song ngữ Việt–Anh để đọc CV, thu thập việc làm từ web và Facebook Groups qua local MCP crawler, chấm điểm và tạo báo cáo mức độ phù hợp.",
+    "longDescription": "Pipeline song ngữ Việt–Anh để đọc CV, thu thập việc làm từ web search, chấm điểm và tạo báo cáo mức độ phù hợp.",
     "developerName": "JobMatching",
     "category": "Productivity",
     "capabilities": ["Read", "Write", "Interactive"],
-    "defaultPrompt": ["Tìm việc làm phù hợp từ CV này và bật thêm nguồn Facebook.", "Phân tích CV và tạo danh sách việc làm phù hợp nhất."],
+    "defaultPrompt": ["Tìm việc làm phù hợp từ CV này.", "Phân tích CV và tạo danh sách việc làm phù hợp nhất."],
     "brandColor": "#2563EB"
   }
 }
