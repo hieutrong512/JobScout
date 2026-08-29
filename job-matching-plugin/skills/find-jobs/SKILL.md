@@ -8,8 +8,9 @@ description: Chạy full pipeline tìm việc song ngữ Việt–Anh — parse 
 Skill điều phối, chạy tuần tự 4 bước. Đối số là đường dẫn CV (PDF/DOCX/text) hoặc tên
 profile đã có trong `data/profiles/`.
 
-Dùng `<run-id>` = ngày hiện tại (YYYY-MM-DD). Tạo `data/profiles`, `data/jobs`,
-`data/results` trong thư mục làm việc nếu chưa có.
+Dùng `<run-id>` duy nhất theo mẫu `<candidate-slug>-<YYYYMMDD-HHMMSS>-<suffix>` và giữ nguyên
+ID này xuyên suốt pipeline. Tạo `data/profiles`, `data/jobs`, `data/results` trong thư mục làm việc
+nếu chưa có.
 
 > **Yêu cầu (bước 2 — thu thập job):**
 > - **Claude Code**: `WebSearch`/`WebFetch` có sẵn — không cần cấu hình.
@@ -28,14 +29,15 @@ Dùng `<run-id>` = ngày hiện tại (YYYY-MM-DD). Tạo `data/profiles`, `data
   - Agent tự động ghi danh sách link này vào `data/config/facebook_groups.json`.
 
 ## Bước 2 — Collect → data/jobs/<run-id>.json
-Spawn subagent **`job-collector`** (context riêng, tốn nhiều lượt search/fetch).
-- Truyền đường dẫn `profile.json` và output `data/jobs/<run-id>.json`.
+Spawn một subagent context riêng và yêu cầu nó áp skill **`job-collector`**; không phụ thuộc custom
+agent cài ngoài plugin.
+- Truyền đường dẫn `profile.json`, `<run-id>` và output `data/jobs/<run-id>.json`.
 - **Nguồn Job Boards**: Luôn quét từ ITviec, TopCV, VietnamWorks, LinkedIn...
 - **Nguồn Facebook Groups (Nếu người dùng đồng ý & cung cấp link ở Bước 1)**: Gọi tool MCP local `run_facebook_crawler` của server `facebook_crawler`; truyền `workspace_root` tuyệt đối, profile, config, groups và queries. Đọc file JSON tại `output_path` tool trả về. Không chạy Python/Playwright trực tiếp trong sandbox và không fallback sang shell nếu MCP lỗi.
 - Giữ job thỏa mãn tiêu chuẩn: Job board cần full JD; Facebook post chỉ cần Title + Vị trí/Tech stack + Kênh liên hệ/Link bài viết. Tối đa 20 job hợp lệ.
 
 ## Bước 3 — Match → data/results/<run-id>.shortlist.json
-Spawn subagent **`job-matcher`** (context riêng, chấm điểm bulk).
+Spawn một subagent context riêng và yêu cầu nó áp skill **`job-matcher`** (chấm điểm bulk).
 - Truyền `profile.json` + `data/jobs/<run-id>.json`.
 - Chấm điểm theo skill **`scoring-rubric`**, dùng trọng số từ `target.priorities`.
 

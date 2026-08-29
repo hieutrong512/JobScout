@@ -45,7 +45,7 @@ class FacebookCrawlerMcpTests(unittest.TestCase):
             prev = os.getcwd()
             try:
                 os.chdir(root)
-                _command, output, command_root = SERVER.build_crawler_command({"limit": 10})
+                _command, output, command_root, _run_id = SERVER.build_crawler_command({"limit": 10})
                 self.assertEqual(command_root, root)
                 self.assertTrue(str(output).startswith(str(root)))
             finally:
@@ -58,7 +58,7 @@ class FacebookCrawlerMcpTests(unittest.TestCase):
             profile.parent.mkdir(parents=True)
             profile.write_text(json.dumps({"candidate": {"name": "Test"}}), encoding="utf-8")
 
-            command, output, command_root = SERVER.build_crawler_command(
+            command, output, command_root, run_id = SERVER.build_crawler_command(
                 {
                     "workspace_root": str(root),
                     "profile_path": "data/profiles/candidate.json",
@@ -74,6 +74,8 @@ class FacebookCrawlerMcpTests(unittest.TestCase):
             self.assertIn(str(root), command)
             self.assertIn(str(profile), command)
             self.assertIn("--workspace-root", command)
+            self.assertIn("--run-id", command)
+            self.assertIn(run_id, output.name)
 
     def test_relative_workspace_root_rejected(self):
         with self.assertRaisesRegex(ValueError, "absolute path"):
@@ -90,7 +92,7 @@ class FacebookCrawlerMcpTests(unittest.TestCase):
     def test_rejects_spoofed_facebook_group_url(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir).resolve()
-            with self.assertRaisesRegex(ValueError, "facebook.com/groups URL"):
+            with self.assertRaisesRegex(ValueError, "Invalid Facebook group URL"):
                 SERVER.build_crawler_command(
                     {
                         "workspace_root": str(root),
@@ -103,6 +105,31 @@ class FacebookCrawlerMcpTests(unittest.TestCase):
             root = Path(temp_dir).resolve()
             with self.assertRaisesRegex(ValueError, "limit must be an integer"):
                 SERVER.build_crawler_command({"workspace_root": str(root), "limit": True})
+    def test_rejects_group_trailing_path_and_count_limits(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir).resolve()
+            with self.assertRaisesRegex(ValueError, "Invalid Facebook group URL"):
+                SERVER.build_crawler_command({
+                    "workspace_root": str(root),
+                    "groups": ["https://facebook.com/groups/python/posts/123"],
+                })
+            with self.assertRaisesRegex(ValueError, "at most 20"):
+                SERVER.build_crawler_command({
+                    "workspace_root": str(root),
+                    "groups": [f"https://facebook.com/groups/group{i}" for i in range(21)],
+                })
+            with self.assertRaisesRegex(ValueError, "at most 8"):
+                SERVER.build_crawler_command({
+                    "workspace_root": str(root), "queries": [f"query{i}" for i in range(9)]
+                })
+
+    def test_run_ids_make_default_outputs_unique(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir).resolve()
+            _, first, _, first_id = SERVER.build_crawler_command({"workspace_root": str(root)})
+            _, second, _, second_id = SERVER.build_crawler_command({"workspace_root": str(root)})
+            self.assertNotEqual(first_id, second_id)
+            self.assertNotEqual(first, second)
 
     def test_crawler_python_honors_env_override(self):
         prev = os.environ.get("JOB_MATCHING_PYTHON")

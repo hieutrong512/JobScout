@@ -14,12 +14,12 @@ dùng CHUNG `skills/`, `schemas/`, `scripts/`, `mcp/`. Mục tiêu: tìm và x�
 
 - **Skills** (`skills/*/SKILL.md`): `find-jobs` (điều phối full pipeline), `candidate-intake`,
   `scoring-rubric`, `job-schema`, `bilingual-normalization`, `fit-analyzer`, `application-assistant`, `fb-crawler`.
-- **Agents** (`agents/*.toml` cho Codex; `agents/*.md` cho Claude): `job-collector`, `job-matcher` —
-  subagent chạy context riêng cho các bước tốn token (search/scrape, chấm điểm bulk).
+- **Agents** (`agents/*.md` cho Claude; skills `job-collector`/`job-matcher` cho Codex):
+  chạy context riêng cho các bước tốn token (search/scrape, chấm điểm bulk).
 - **Schemas** (`schemas/*.json`): data contracts profile / job / match.
-- **MCP** (`.codex-plugin/mcp.json` cho Codex; `.mcp.json` cho Claude): local server `facebook_crawler`
-  bọc `scripts/fb_crawler.py` thành tool `run_facebook_crawler`. Launcher Codex (`scripts/launch_facebook_crawler_mcp.cmd`)
-  hiện là script Windows; tự dò `py`/`python` có Playwright hoặc dùng `JOB_MATCHING_PYTHON`.
+- **MCP** (inline trong manifest Codex; `.mcp.json` cho Claude): local server `facebook_crawler`
+  bọc `scripts/fb_crawler.py` thành tool `run_facebook_crawler`. Launcher `.cmd`/`.sh` chỉ là helper;
+  Playwright chỉ được kiểm tra khi tool crawler thực sự chạy.
 
 ## Bật web search & Playwright
 

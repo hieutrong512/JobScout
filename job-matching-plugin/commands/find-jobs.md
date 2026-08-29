@@ -7,7 +7,7 @@ argument-hint: [đường dẫn CV hoặc tên profile]
 
 Chạy tuần tự 4 bước. `$ARGUMENTS` là đường dẫn CV (PDF/DOCX/text) hoặc tên profile đã có.
 
-Dùng `<run-id>` = ngày hiện tại (YYYY-MM-DD). Tạo thư mục `data/profiles`, `data/jobs`, `data/results` trong thư mục làm việc nếu chưa có.
+Dùng `<run-id>` duy nhất theo mẫu `<candidate-slug>-<YYYYMMDD-HHMMSS>-<suffix>` và giữ nguyên ID này xuyên suốt pipeline. Tạo thư mục `data/profiles`, `data/jobs`, `data/results` trong thư mục làm việc nếu chưa có.
 
 ## Bước 1 — Intake (skill `candidate-intake`)
 - Nếu `$ARGUMENTS` là file CV → parse và tạo `data/profiles/<slug>.json`.
@@ -18,7 +18,7 @@ Dùng `<run-id>` = ngày hiện tại (YYYY-MM-DD). Tạo thư mục `data/profi
   - Hỏi người dùng: *"Bạn có muốn quét thêm tin tuyển dụng từ các Hội nhóm Facebook không?"*
   - *(Cảnh báo minh bạch: Nếu chọn Có và chưa có session, trình duyệt sẽ tự động mở lên để bạn đăng nhập Facebook lấy cookie session — được lưu bảo mật cục bộ tại `data/.auth/`, không bao giờ commit lên Git).*
   - **Nếu người dùng chọn CÓ**: Yêu cầu người dùng **gửi danh sách link các Group Facebook công khai** mà họ muốn quét (ví dụ: `https://facebook.com/groups/pythonvietnam`, `https://facebook.com/groups/1407434203194440`...).
-  - Agent tự động ghi danh sách link này vào [`data/config/facebook_groups.json`](file:///d:/StartUp/JobMatching/data/config/facebook_groups.json).
+  - Agent tự động ghi danh sách link này vào `data/config/facebook_groups.json` của workspace hiện tại.
 
 ## Bước 2a — Cào Facebook (luồng chính, CHỈ khi người dùng đã bật ở Bước 1)
 
@@ -27,6 +27,7 @@ Dùng `<run-id>` = ngày hiện tại (YYYY-MM-DD). Tạo thư mục `data/profi
 1. Nếu chưa có `data/.auth/facebook_state.json`, thông báo rõ cho người dùng rằng một cửa sổ Chromium sắp mở và họ cần tự đăng nhập Facebook. Sau đó gọi MCP tool với `login_only: true`, `headless: false`. Đợi tool trả `status: login_saved` rồi mới tiếp tục.
 2. **Gọi MCP tool để cào dữ liệu** với tham số:
    - `profile_path`: `data/profiles/<slug>.json`
+   - `run_id`: `<run-id>` của pipeline
    - `groups`: danh sách link group người dùng cung cấp ở Bước 1 (hoặc để trống nếu đã ghi vào `config_path`)
    - `config_path`: `data/config/facebook_groups.json`
    - (tùy chọn) `limit`, `scrolls`, `queries`; bỏ trống `workspace_root` → tool tự dùng thư mục hiện tại.

@@ -33,7 +33,10 @@ Trước khi chấm điểm, kiểm tra `profile.target.dealbreakers` và các r
 | compensation | 0.15 | Lương so với kỳ vọng |
 | culture | 0.05 | Quy mô/loại hình công ty, tín hiệu văn hóa |
 
-**Override:** nếu `profile.target.priorities` có giá trị, dùng chúng thay cho mặc định. Chuẩn hóa lại để tổng = 1 (chia mỗi trọng số cho tổng). Luôn ghi kết quả vào `weights_used`.
+**Bắt buộc chuẩn hóa:** cả bộ trọng số mặc định và bộ `profile.target.priorities` override đều phải
+được chia cho tổng thực tế trước khi tính điểm, để tổng `weights_used` luôn bằng 1. Bộ số mặc định
+trên chủ ý thể hiện tỷ lệ tương đối; không được dùng trực tiếp khi tổng chưa bằng 1. Luôn ghi bộ đã
+chuẩn hóa vào `weights_used`.
 
 ## Cách tính từng chiều
 
@@ -88,7 +91,8 @@ Trước khi chấm điểm, kiểm tra `profile.target.dealbreakers` và các r
 ## Tổng hợp & khuyến nghị
 
 ```
-overall = Σ (dimension_score[d] * weight[d])   với d ∈ 6 chiều
+normalized_weight[d] = weight[d] / Σ weight
+overall = Σ (dimension_score[d] * normalized_weight[d])   với d ∈ 6 chiều
 ```
 
 Map sang `recommendation`:

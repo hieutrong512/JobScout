@@ -111,16 +111,13 @@ class PluginIntegrityTests(unittest.TestCase):
         self.assertEqual(manifest["name"], "job-matching")
         self.assertEqual(manifest["version"], "1.1.0")
         self.assertEqual(manifest.get("skills"), "./skills/")
-        self.assertEqual(manifest.get("mcpServers"), "./.codex-plugin/mcp.json")
+        server = manifest["mcpServers"]["facebook_crawler"]
+        self.assertEqual(server["command"], "python")
+        self.assertIn("mcp/facebook_crawler_server.py", " ".join(server["args"]))
 
     def test_codex_mcp_server_declared(self):
-        mcp_path = PLUGIN_ROOT / ".codex-plugin" / "mcp.json"
-        mcp = json.loads(mcp_path.read_text(encoding="utf-8"))
-        server = mcp["mcpServers"]["facebook_crawler"]
-        self.assertIn(
-            "launch_facebook_crawler_mcp.cmd",
-            " ".join(server.get("args", [])),
-        )
+        self.assertFalse((PLUGIN_ROOT / "codex.mcp.json").exists())
+        self.assertFalse((PLUGIN_ROOT / ".codex-plugin" / "mcp.json").exists())
         launcher = PLUGIN_ROOT / "scripts" / "launch_facebook_crawler_mcp.cmd"
         self.assertTrue(launcher.is_file(), "Thiếu launcher MCP cho Codex")
 
@@ -130,16 +127,29 @@ class PluginIntegrityTests(unittest.TestCase):
         self.assertEqual(claude["name"], codex["name"])
         self.assertEqual(claude["version"], codex["version"])
 
-    def test_each_agent_has_both_claude_and_codex_form(self):
-        md_agents = {p.stem for p in (PLUGIN_ROOT / "agents").glob("*.md")}
-        toml_agents = {p.stem for p in (PLUGIN_ROOT / "agents").glob("*.toml")}
-        self.assertTrue(md_agents, "Không có agent .md (Claude)")
-        self.assertEqual(
-            md_agents,
-            toml_agents,
-            f"Agent Claude (.md) và Codex (.toml) phải khớp bộ: md={md_agents} toml={toml_agents}",
-        )
+    def test_claude_agents_and_codex_worker_skills_exist(self):
+        self.assertTrue((PLUGIN_ROOT / "agents" / "job-collector.md").is_file())
+        self.assertTrue((PLUGIN_ROOT / "agents" / "job-matcher.md").is_file())
+        self.assertTrue((PLUGIN_ROOT / "skills" / "job-collector" / "SKILL.md").is_file())
+        self.assertTrue((PLUGIN_ROOT / "skills" / "job-matcher" / "SKILL.md").is_file())
+        self.assertEqual(list((PLUGIN_ROOT / "agents").glob("*.toml")), [])
 
+    def test_repo_codex_marketplace_is_valid(self):
+        path = PLUGIN_ROOT.parent / ".agents" / "plugins" / "marketplace.json"
+        marketplace = json.loads(path.read_text(encoding="utf-8"))
+        entry = next(item for item in marketplace["plugins"] if item["name"] == "job-matching")
+        self.assertEqual(entry["source"]["path"], "./job-matching-plugin")
+        self.assertIn("policy", entry)
+        self.assertTrue(entry["category"])
+
+    def test_launchers_do_not_require_optional_playwright_at_startup(self):
+        launcher = (PLUGIN_ROOT / "scripts" / "launch_facebook_crawler_mcp.cmd").read_text(encoding="utf-8")
+        self.assertNotIn("import playwright", launcher)
+        self.assertTrue((PLUGIN_ROOT / "scripts" / "launch_facebook_crawler_mcp.sh").is_file())
+
+    def test_command_has_no_developer_file_uri(self):
+        command = (PLUGIN_ROOT / "commands" / "find-jobs.md").read_text(encoding="utf-8")
+        self.assertNotIn("file:///", command.casefold())
     def test_shared_skills_are_plugin_root_relative(self):
         # Skill dùng chung không được hardcode ${CLAUDE_PLUGIN_ROOT} (Codex không expand được).
         offenders = []

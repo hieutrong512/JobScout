@@ -34,6 +34,12 @@ class FacebookCrawlerLogicTests(unittest.TestCase):
             ["Python", "Backend Engineer"],
         )
 
+    def test_malformed_target_falls_back_safely(self):
+        self.assertEqual(
+            CRAWLER.get_search_queries({"target": "Backend Engineer"}),
+            CRAWLER.DEFAULT_SEARCH_QUERIES,
+        )
+
     def test_relevance_uses_profile_instead_of_ai_hard_code(self):
         backend_profile = {
             "target": {"desired_roles": ["Backend Engineer"]},
@@ -73,6 +79,25 @@ class FacebookCrawlerLogicTests(unittest.TestCase):
         )
         self.assertEqual(len(groups), 1)
         self.assertEqual(groups[0]["url"], "https://www.facebook.com/groups/pythonvietnam")
+
+    def test_group_urls_reject_empty_slug_and_trailing_paths(self):
+        for value in (
+            "https://www.facebook.com/groups/",
+            "https://www.facebook.com/groups/pythonvietnam/posts/123",
+            "https://evil.example/groups/pythonvietnam",
+        ):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                CRAWLER.parse_group_urls(value)
+
+    def test_config_rejects_malformed_group_url(self):
+        with self.assertRaisesRegex(ValueError, "không hợp lệ"):
+            CRAWLER.normalize_group_config({"groups": [{"url": "https://facebook.com/groups/"}]})
+
+    def test_posted_at_parser_handles_relative_and_iso_values(self):
+        import datetime
+        now = datetime.datetime(2026, 8, 29, 12, tzinfo=datetime.timezone.utc)
+        self.assertEqual(CRAWLER.parse_posted_at("2 giờ trước", now), "2026-08-29T10:00:00+00:00")
+        self.assertEqual(CRAWLER.parse_posted_at("2026-08-28T10:00:00Z", now), "2026-08-28T10:00:00+00:00")
 
     def test_group_config_accepts_legacy_list_format(self):
         groups = CRAWLER.normalize_group_config(

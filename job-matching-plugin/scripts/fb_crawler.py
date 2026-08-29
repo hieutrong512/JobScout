@@ -16,6 +16,7 @@ import argparse
 import datetime
 import hashlib
 import json
+import uuid
 import os
 import re
 import sys
@@ -197,8 +198,8 @@ def get_search_queries(profile: Optional[Dict[str, Any]] = None, custom_queries:
         return _unique_strings(custom_queries.split(","))[:8]
 
     if profile:
-        target = profile.get("target", {})
-        desired_roles = target.get("desired_roles", [])
+        target = profile.get("target") if isinstance(profile.get("target"), dict) else {}
+        desired_roles = target.get("desired_roles") if isinstance(target.get("desired_roles"), list) else []
         if desired_roles:
             queries: List[str] = []
             for role in desired_roles:
@@ -284,6 +285,57 @@ def is_job_relevant(text: str, profile: Optional[Dict[str, Any]] = None) -> bool
     return any(_contains_term(text_lower, term) for term in _profile_relevance_terms(profile))
 
 
+def normalize_group_url(value: str) -> str:
+    """Return a canonical Facebook group URL or raise for malformed input."""
+    candidate = value.strip()
+    if re.fullmatch(r"[A-Za-z0-9._-]+", candidate):
+        candidate = f"https://www.facebook.com/groups/{candidate}"
+    parsed = urllib.parse.urlparse(candidate)
+    host = (parsed.hostname or "").casefold()
+    match = re.fullmatch(r"/groups/([A-Za-z0-9._-]+)/?", parsed.path)
+    if parsed.scheme not in {"http", "https"} or host not in {"facebook.com", "www.facebook.com", "m.facebook.com"} or not match:
+        raise ValueError(f"URL Facebook Group không hợp lệ: {value}")
+    return f"https://www.facebook.com/groups/{match.group(1)}"
+
+
+def parse_posted_at(raw_value: Optional[str], now: Optional[datetime.datetime] = None) -> Optional[str]:
+    """Parse common Facebook ISO, date and relative timestamps to UTC ISO-8601."""
+    if not raw_value or not raw_value.strip():
+        return None
+    now = now or datetime.datetime.now(datetime.timezone.utc)
+    text = " ".join(raw_value.strip().split()).casefold()
+    if text.isdigit():
+        try:
+            return datetime.datetime.fromtimestamp(int(text), tz=datetime.timezone.utc).isoformat()
+        except (OverflowError, OSError, ValueError):
+            return None
+    try:
+        parsed = datetime.datetime.fromisoformat(raw_value.replace("Z", "+00:00"))
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=now.tzinfo)
+        return parsed.astimezone(datetime.timezone.utc).isoformat()
+    except ValueError:
+        pass
+    text = re.sub(r"\s+(trước|ago)$", "", text)
+    relative = re.fullmatch(r"(\d+)\s*(phút|minute|minutes|giờ|hour|hours|ngày|day|days)", text)
+    if relative:
+        amount = int(relative.group(1))
+        unit = relative.group(2)
+        if unit in {"phút", "minute", "minutes"}:
+            delta = datetime.timedelta(minutes=amount)
+        elif unit in {"giờ", "hour", "hours"}:
+            delta = datetime.timedelta(hours=amount)
+        else:
+            delta = datetime.timedelta(days=amount)
+        return (now - delta).astimezone(datetime.timezone.utc).isoformat()
+    for fmt in ("%d/%m/%Y", "%d-%m-%Y", "%Y-%m-%d"):
+        try:
+            return datetime.datetime.strptime(text, fmt).replace(tzinfo=datetime.timezone.utc).isoformat()
+        except ValueError:
+            continue
+    return None
+
+
 def ensure_facebook_session(playwright_instance, force_login: bool = False, headless: bool = False) -> BrowserContext:
     """
     Khởi tạo Browser Context và đảm bảo người dùng đã đăng nhập.
@@ -295,39 +347,48 @@ def ensure_facebook_session(playwright_instance, force_login: bool = False, head
 
     if has_state:
         print(f"[*] Tìm thấy session cũ tại: {STATE_FILE}")
-        browser = playwright_instance.chromium.launch(headless=headless)
-        context = browser.new_context(
-            storage_state=str(STATE_FILE),
-            viewport={"width": 1280, "height": 800},
-            locale="vi-VN",
-            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-        )
-
-        # Kiểm tra xem session còn sống không
-        page = context.new_page()
+        browser = context = page = None
         try:
+            browser = playwright_instance.chromium.launch(headless=headless)
+            context = browser.new_context(
+                storage_state=str(STATE_FILE),
+                viewport={"width": 1280, "height": 800},
+                locale="vi-VN",
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            )
+            page = context.new_page()
             page.goto("https://www.facebook.com/", timeout=20000, wait_until="domcontentloaded")
             time.sleep(2)
-
             cookies = context.cookies()
             c_user_present = any(c.get("name") == "c_user" and c.get("value") for c in cookies)
             is_login_page = "login" in page.url or page.locator("input[name='email']").count() > 0
-
             if c_user_present and not is_login_page:
                 print("[✅] Session Facebook hợp lệ! Sẵn sàng quét dữ liệu.")
                 page.close()
                 return context
-            else:
-                print("[⚠️] Session đã hết hạn hoặc chưa đăng nhập. Đang chuyển sang chế độ đăng nhập tương tác...")
-                page.close()
-                context.close()
-                browser.close()
-        except Exception as e:
-            print(f"[⚠️] Lỗi kiểm tra session: {e}. Đang mở lại trình duyệt để đăng nhập...")
+            print("[⚠️] Session đã hết hạn. Đang chuyển sang đăng nhập tương tác...")
+        except Exception as exc:
+            print(f"[⚠️] Session không đọc được: {exc}. Sẽ đăng nhập lại.")
             try:
-                page.close()
-                context.close()
-                browser.close()
+                invalid = STATE_FILE.with_name(f"{STATE_FILE.stem}.invalid-{int(time.time())}{STATE_FILE.suffix}")
+                STATE_FILE.replace(invalid)
+                print(f"[⚠️] Đã cách ly session lỗi tại: {invalid}")
+            except OSError:
+                pass
+        finally:
+            try:
+                if page and not page.is_closed():
+                    page.close()
+            except Exception:
+                pass
+            try:
+                if context:
+                    context.close()
+            except Exception:
+                pass
+            try:
+                if browser:
+                    browser.close()
             except Exception:
                 pass
 
@@ -356,25 +417,32 @@ def ensure_facebook_session(playwright_instance, force_login: bool = False, head
     max_wait = 300  # 5 phút
     logged_in = False
 
-    while time.time() - start_time < max_wait:
-        time.sleep(2)
-        cookies = context.cookies()
-        c_user = next((c.get("value") for c in cookies if c.get("name") == "c_user"), None)
-        current_url = page.url
-
-        if c_user and ("login" not in current_url) and ("checkpoint" not in current_url):
-            print("\n[✅] Đã xác nhận phiên đăng nhập Facebook hợp lệ!")
-            time.sleep(3)
-            context.storage_state(path=str(STATE_FILE))
-            print(f"[✅] Đã lưu session an toàn vào: {STATE_FILE}")
-            logged_in = True
-            break
+    try:
+        while time.time() - start_time < max_wait:
+            time.sleep(2)
+            if page.is_closed():
+                raise RuntimeError("Cửa sổ đăng nhập đã bị đóng trước khi hoàn tất.")
+            cookies = context.cookies()
+            c_user = next((c.get("value") for c in cookies if c.get("name") == "c_user"), None)
+            current_url = page.url
+            if c_user and ("login" not in current_url) and ("checkpoint" not in current_url):
+                print("\n[✅] Đã xác nhận phiên đăng nhập Facebook hợp lệ!")
+                time.sleep(3)
+                context.storage_state(path=str(STATE_FILE))
+                print(f"[✅] Đã lưu session an toàn vào: {STATE_FILE}")
+                logged_in = True
+                break
+    except Exception as exc:
+        try:
+            context.close()
+            browser.close()
+        finally:
+            raise RuntimeError(f"Đăng nhập Facebook không hoàn tất: {exc}") from exc
 
     if not logged_in:
-        print("[❌] Quá thời gian chờ đăng nhập (5 phút). Vui lòng thử lại!")
         context.close()
         browser.close()
-        sys.exit(1)
+        raise RuntimeError("Quá thời gian chờ đăng nhập Facebook (5 phút).")
 
     page.close()
     return context
@@ -452,15 +520,16 @@ def extract_posts_from_page(
                 if full_text.startswith("Gợi ý cho bạn") or full_text.startswith("Suggested for you"):
                     continue
 
-                # Hash tránh trùng
-                text_hash = hashlib.md5(full_text[:200].encode("utf-8")).hexdigest()
+                # Hash toàn bộ nội dung đã chuẩn hóa; chỉ đánh dấu sau khi bài vượt bộ lọc.
+                normalized_text = " ".join(full_text.split()).casefold()
+                text_hash = hashlib.sha256(normalized_text.encode("utf-8")).hexdigest()
                 if text_hash in seen_hashes:
                     continue
-                seen_hashes.add(text_hash)
 
                 # Kiểm tra lọc theo Profile nghiêm ngặt
                 if not is_job_relevant(full_text, profile=profile):
                     continue
+                seen_hashes.add(text_hash)
 
                 # 3. Trích xuất tác giả
                 author_name = "Thành viên Facebook"
@@ -480,15 +549,19 @@ def extract_posts_from_page(
                 except Exception:
                     pass
 
-                # 4. Trích xuất Direct Post Permalink (hover timestamp link)
-                post_url = group_url
+                # 4. Trích xuất permalink và timestamp; không giả mạo group URL thành post URL.
+                post_url = ""
+                posted_at_raw = None
                 try:
                     candidate_links = container.locator("a[href*='__cft__'], a[href*='/posts/'], a[href*='/permalink/'], a[href*='multi_permalinks']").all()
                     for cl in candidate_links:
                         raw_href = cl.get_attribute("href") or ""
                         if "/user/" in raw_href or "profile.php" in raw_href or "/hashtag/" in raw_href:
                             continue
-
+                        for attr in ("aria-label", "title", "data-utime"):
+                            value = cl.get_attribute(attr)
+                            if value and not posted_at_raw:
+                                posted_at_raw = value
                         if "/posts/" not in raw_href and "/permalink/" not in raw_href:
                             try:
                                 cl.hover(timeout=400, force=True)
@@ -496,7 +569,6 @@ def extract_posts_from_page(
                                 raw_href = cl.get_attribute("href") or raw_href
                             except Exception:
                                 pass
-
                         if "/posts/" in raw_href or "/permalink/" in raw_href or "multi_permalinks" in raw_href:
                             clean_post = raw_href.split("?")[0]
                             post_url = f"https://www.facebook.com{clean_post}" if clean_post.startswith("/") else clean_post
@@ -504,17 +576,32 @@ def extract_posts_from_page(
                 except Exception:
                     pass
 
-                # 5. Bóc tách liên hệ
+                # 5. Bóc tách liên hệ. Bài không có permalink chỉ giữ khi còn đầu mối liên hệ.
                 contacts = extract_contacts(full_text)
                 if author_name and author_name != "Thành viên Facebook":
                     contacts["facebook_author"] = author_name
                     if author_link:
                         contacts["facebook_author_url"] = author_link
+                if not post_url and not contacts and not author_link:
+                    continue
+                posted_at = parse_posted_at(posted_at_raw)
+                posted_date = posted_at[:10] if posted_at else None
+                if posted_at:
+                    posted_dt = datetime.datetime.fromisoformat(posted_at)
+                    age = datetime.datetime.now(datetime.timezone.utc) - posted_dt
+                    if age > datetime.timedelta(days=45):
+                        continue
+                    if age < datetime.timedelta(days=-1):
+                        posted_at = posted_date = None
+                        posted_at_raw = f"untrusted:{posted_at_raw}"
 
                 post_item = {
-                    "id": f"fb_{text_hash[:8]}",
+                    "id": f"fb_{text_hash[:16]}",
                     "group_name": group_name,
                     "group_url": group_url,
+                    "posted_at": posted_at,
+                    "posted_date": posted_date,
+                    "posted_at_raw": posted_at_raw,
                     "author": author_name,
                     "author_url": author_link,
                     "post_url": post_url,
@@ -539,6 +626,19 @@ def extract_posts_from_page(
 
     return extracted
 
+def assert_group_page_accessible(page: Page) -> None:
+    """Fail explicitly when Facebook served login/checkpoint/private/unavailable UI."""
+    url = page.url.casefold()
+    body = page.locator("body").inner_text(timeout=5000).casefold()
+    blockers = ("content isn't available", "nội dung này hiện không hiển thị", "private group", "nhóm riêng tư")
+    if "login" in url or page.locator("input[name='email']").count() > 0:
+        raise RuntimeError("Facebook session đã hết hạn; cần đăng nhập lại.")
+    if "checkpoint" in url:
+        raise RuntimeError("Facebook yêu cầu checkpoint/xác minh tài khoản.")
+    if any(marker in body for marker in blockers):
+        raise RuntimeError("Group riêng tư, không tồn tại hoặc tài khoản không có quyền truy cập.")
+
+
 
 def crawl_facebook_group(
     context: BrowserContext,
@@ -549,7 +649,7 @@ def crawl_facebook_group(
     use_search: bool = True,
     max_scrolls: int = 5,
     limit_posts: int = 15
-) -> List[Dict[str, Any]]:
+) -> tuple[List[Dict[str, Any]], Dict[str, int]]:
     """
     Truy cập vào một Facebook Group và tìm kiếm bài viết trực tiếp qua tính năng In-Group Search.
     """
@@ -557,6 +657,7 @@ def crawl_facebook_group(
     print(f"    URL: {group_url}")
 
     extracted_posts: List[Dict[str, Any]] = []
+    stats = {"attempted_pages": 0, "successful_pages": 0, "failed_pages": 0}
     seen_hashes = set()
 
     clean_group_base = group_url.split("?")[0].rstrip("/")
@@ -570,9 +671,12 @@ def crawl_facebook_group(
             print(f"  🔍 Tìm kiếm trong nhóm với từ khóa: '{q}'")
             print(f"     Search URL: {search_target}")
 
+            stats["attempted_pages"] += 1
             page = context.new_page()
             try:
                 page.goto(search_target, timeout=30000, wait_until="domcontentloaded")
+                assert_group_page_accessible(page)
+                stats["successful_pages"] += 1
                 time.sleep(3.5)
                 posts = extract_posts_from_page(
                     page=page,
@@ -585,6 +689,7 @@ def crawl_facebook_group(
                 )
                 extracted_posts.extend(posts)
             except Exception as e:
+                stats["failed_pages"] += 1
                 print(f"     [⚠️] Lỗi tìm kiếm '{q}': {e}")
             finally:
                 page.close()
@@ -593,9 +698,12 @@ def crawl_facebook_group(
         # Fallback: Cuộn feed thông thường
         print("  [+] Đang cuộn feed nhóm theo thứ tự thời gian...")
         page = context.new_page()
+        stats["attempted_pages"] += 1
         try:
             target_url = f"{clean_group_base}/?sorting_setting=CHRONOLOGICAL"
             page.goto(target_url, timeout=30000, wait_until="domcontentloaded")
+            assert_group_page_accessible(page)
+            stats["successful_pages"] += 1
             time.sleep(4)
             posts = extract_posts_from_page(
                 page=page,
@@ -608,33 +716,32 @@ def crawl_facebook_group(
             )
             extracted_posts.extend(posts)
         except Exception as e:
+            stats["failed_pages"] += 1
             print(f"     [⚠️] Lỗi cuộn feed: {e}")
         finally:
             page.close()
 
     print(f"  -> Đã thu thập {len(extracted_posts)} bài viết phù hợp target từ {group_name}.")
-    return extracted_posts
+    if stats["successful_pages"] == 0:
+        raise RuntimeError(f"Không thể đọc bất kỳ trang nào của group {group_name}.")
+    return extracted_posts, stats
 
 
 def parse_group_urls(input_data: str) -> List[Dict[str, Any]]:
     """Phân tích chuỗi URL hoặc danh sách link do người dùng cung cấp thành danh sách group hợp lệ."""
-    raw_urls = re.findall(r"https?://(?:www\.)?facebook\.com/groups/[a-zA-Z0-9._-]+/?", input_data)
-    if not raw_urls:
-        tokens = [t.strip() for t in re.split(r"[,\n\s]+", input_data) if t.strip()]
-        for t in tokens:
-            if "facebook.com/groups/" in t:
-                raw_urls.append(t.split("?")[0].rstrip("/"))
-            elif t.isalnum():
-                raw_urls.append(f"https://www.facebook.com/groups/{t}")
-
+    tokens = [t.strip() for t in re.split(r"[,\n\s]+", input_data) if t.strip()]
     groups = []
     seen = set()
-    for u in raw_urls:
-        clean_u = u.split("?")[0].rstrip("/")
+    errors = []
+    for token in tokens:
+        try:
+            clean_u = normalize_group_url(token)
+        except ValueError as exc:
+            errors.append(str(exc))
+            continue
         if clean_u in seen:
             continue
         seen.add(clean_u)
-
         slug = clean_u.split("/groups/")[-1].strip("/")
         groups.append({
             "name": f"FB Group ({slug})",
@@ -643,6 +750,8 @@ def parse_group_urls(input_data: str) -> List[Dict[str, Any]]:
             "category": "user-provided",
             "description": f"Group do người dùng cung cấp ({slug})"
         })
+    if errors:
+        raise ValueError("; ".join(errors))
     return groups
 
 
@@ -657,13 +766,22 @@ def normalize_group_config(config_data: Any) -> List[Dict[str, Any]]:
     else:
         raise ValueError("Config Facebook phải là JSON object hoặc danh sách groups")
 
-    groups = [
-        group for group in raw_groups
-        if isinstance(group, dict)
-        and isinstance(group.get("url"), str)
-        and group["url"].strip()
-        and group.get("enabled", True)
-    ]
+    groups = []
+    errors = []
+    for index, group in enumerate(raw_groups):
+        if not isinstance(group, dict) or not group.get("enabled", True):
+            continue
+        if not isinstance(group.get("url"), str):
+            errors.append(f"groups[{index}].url phải là chuỗi")
+            continue
+        try:
+            normalized = dict(group)
+            normalized["url"] = normalize_group_url(group["url"])
+            groups.append(normalized)
+        except ValueError as exc:
+            errors.append(f"groups[{index}]: {exc}")
+    if errors:
+        raise ValueError("; ".join(errors))
     if not groups:
         raise ValueError(
             "Chưa có Facebook Group nào để crawl. Hãy truyền tham số 'groups' cho MCP tool "
@@ -680,6 +798,7 @@ def main():
     parser.add_argument("--profile", type=str, default=None, help="Đường dẫn file profile.json để lọc theo target ứng viên")
     parser.add_argument("--queries", type=str, default=None, help="Từ khóa tìm kiếm trong group, cách nhau bởi dấu phẩy (vd: 'AI Engineer, Computer Vision, LLM')")
     parser.add_argument("--no-search", action="store_true", help="Tắt chế độ tìm kiếm trong group, chuyển sang cuộn feed thông thường")
+    parser.add_argument("--run-id", type=str, default=None, help="Mã lần chạy duy nhất")
     parser.add_argument("--output", type=str, default=None, help="Đường dẫn file JSON xuất kết quả")
     parser.add_argument("--login-only", action="store_true", help="Chỉ mở trình duyệt để đăng nhập và lưu session")
     parser.add_argument("--force-login", action="store_true", help="Bắt buộc đăng nhập lại từ đầu")
@@ -708,6 +827,9 @@ def main():
         print(f"[*] Từ khóa tìm kiếm trong nhóm: {search_queries}")
 
     # Xử lý danh sách groups do người dùng gửi (nếu có)
+    run_id = args.run_id or f"fb-{datetime.datetime.now().strftime('%Y%m%d-%H%M%S')}-{uuid.uuid4().hex[:6]}"
+    if not re.fullmatch(r"[A-Za-z0-9._-]{1,100}", run_id):
+        parser.error("--run-id chỉ được chứa chữ, số, dấu chấm, gạch dưới hoặc gạch ngang")
     if args.groups:
         user_groups = parse_group_urls(args.groups)
         if user_groups:
@@ -746,8 +868,9 @@ def main():
         print(f"\n[*] Đã tải {len(groups)} Facebook Groups mục tiêu từ config.")
 
         all_posts: List[Dict[str, Any]] = []
+        aggregate_stats = {"attempted_pages": 0, "successful_pages": 0, "failed_pages": 0}
         for g in groups:
-            posts = crawl_facebook_group(
+            posts, stats = crawl_facebook_group(
                 context=context,
                 group_name=g.get("name", "Unknown Group"),
                 group_url=g.get("url", ""),
@@ -758,18 +881,22 @@ def main():
                 limit_posts=args.limit
             )
             all_posts.extend(posts)
+            for key in aggregate_stats:
+                aggregate_stats[key] += stats[key]
             time.sleep(2)
 
         context.close()
 
         # Xác định file output
-        today_str = datetime.datetime.now().strftime("%Y-%m-%d")
         DEFAULT_JOBS_DIR.mkdir(parents=True, exist_ok=True)
-        out_path = resolve_workspace_path(args.output) if args.output else (DEFAULT_JOBS_DIR / f"raw_fb_posts_{today_str}.json")
+        out_path = resolve_workspace_path(args.output) if args.output else (DEFAULT_JOBS_DIR / f"raw_fb_posts_{run_id}.json")
         out_path.parent.mkdir(parents=True, exist_ok=True)
 
-        with open(out_path, "w", encoding="utf-8") as f:
+        temp_path = out_path.with_suffix(out_path.suffix + f".{uuid.uuid4().hex}.tmp")
+        with open(temp_path, "w", encoding="utf-8") as f:
             json.dump(all_posts, f, ensure_ascii=False, indent=2)
+        os.replace(temp_path, out_path)
+        print("[CRAWL_SUMMARY] " + json.dumps({"run_id": run_id, **aggregate_stats}, ensure_ascii=False))
 
         print("\n" + "=" * 60)
         print(f"[✅] HOÀN TẤT CÀO DỮ LIỆU FACEBOOK GROUPS!")

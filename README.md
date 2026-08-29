@@ -4,7 +4,7 @@ Plugin **dùng được ở CẢ Claude Code lẫn Codex** (dual-manifest) giúp
 
 - Plugin (nguồn chân lý duy nhất): [`job-matching-plugin/`](job-matching-plugin/) — chứa cả `.claude-plugin/` và `.codex-plugin/`, dùng chung `skills/`, `schemas/`, `scripts/`, `mcp/`.
 - Marketplace Claude: [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json)
-- Hướng dẫn: [`CLAUDE.md`](job-matching-plugin/CLAUDE.md) (Claude) · [`AGENTS.md`](job-matching-plugin/AGENTS.md) (Codex)
+- Hướng dẫn: [`claude-runtime-notes.md`](job-matching-plugin/docs/claude-runtime-notes.md) (Claude) · [`AGENTS.md`](job-matching-plugin/AGENTS.md) (Codex)
 
 ## Cài đặt
 

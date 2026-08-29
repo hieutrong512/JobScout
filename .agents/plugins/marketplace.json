@@ -1,0 +1,12 @@
+{
+  "name": "jobmatching-local",
+  "interface": {"displayName": "JobMatching Local"},
+  "plugins": [
+    {
+      "name": "job-matching",
+      "source": {"source": "local", "path": "./job-matching-plugin"},
+      "policy": {"installation": "AVAILABLE", "authentication": "ON_INSTALL"},
+      "category": "Productivity"
+    }
+  ]
+}
