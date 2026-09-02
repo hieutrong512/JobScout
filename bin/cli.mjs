@@ -26,10 +26,10 @@ function heading(msg) { log(`\n${BOLD}${msg}${RESET}`); }
 const command = process.argv[2];
 
 const HELP = `
-${BOLD}job-matching${RESET} — AI job matching setup CLI
+${BOLD}jobscout${RESET} — AI job matching setup CLI
 
 ${BOLD}Usage:${RESET}
-  npx job-matching ${CYAN}<command>${RESET}
+  npx jobscout ${CYAN}<command>${RESET}
 
 ${BOLD}Commands:${RESET}
   ${CYAN}setup${RESET}           Auto-detect platform & install (recommended)
@@ -39,9 +39,9 @@ ${BOLD}Commands:${RESET}
   ${CYAN}setup all${RESET}       Setup for all platforms
 
 ${BOLD}Examples:${RESET}
-  ${DIM}npx job-matching setup          ${RESET}# auto-detect
-  ${DIM}npx job-matching setup claude    ${RESET}# Claude Code only
-  ${DIM}npx job-matching setup chatgpt   ${RESET}# ChatGPT only
+  ${DIM}npx jobscout setup          ${RESET}# auto-detect
+  ${DIM}npx jobscout setup claude    ${RESET}# Claude Code only
+  ${DIM}npx jobscout setup chatgpt   ${RESET}# ChatGPT only
 `;
 
 function copyDir(src, dest) {

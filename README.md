@@ -11,16 +11,16 @@ với link apply cho từng job.
 ## Cài đặt
 
 ```bash
-npx job-matching setup
+npx jobscout setup
 ```
 
 Tự phát hiện nền tảng và setup. Hoặc chỉ định:
 
 ```bash
-npx job-matching setup claude    # Claude Code
-npx job-matching setup codex     # Codex CLI
-npx job-matching setup chatgpt   # ChatGPT (Custom GPT)
-npx job-matching setup all       # Tất cả
+npx jobscout setup claude    # Claude Code
+npx jobscout setup codex     # Codex CLI
+npx jobscout setup chatgpt   # ChatGPT (Custom GPT)
+npx jobscout setup all       # Tất cả
 ```
 
 ## Sau khi setup

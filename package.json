@@ -1,13 +1,14 @@
 {
-  "name": "job-matching",
+  "name": "jobscout",
   "version": "1.2.0",
   "description": "AI job matching — tìm và xếp hạng việc làm phù hợp CV, song ngữ Việt–Anh. Chạy trên Claude Code, Codex CLI và ChatGPT.",
   "bin": {
-    "job-matching": "bin/cli.mjs"
+    "jobscout": "bin/cli.mjs"
   },
   "type": "module",
   "keywords": [
     "job-matching",
+    "jobscout",
     "cv",
     "career",
     "recruitment",
