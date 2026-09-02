@@ -1,10 +1,19 @@
 # JobMatching
 
-Plugin **dùng được ở CẢ Claude Code lẫn Codex** (dual-manifest) giúp tìm và xếp hạng các job phù hợp nhất với **target** và **CV** của ứng viên. Xử lý song ngữ Việt–Anh, lấy dữ liệu job qua Search Engine + Web scraping (không cần API key).
+Trợ lý tìm và xếp hạng các job phù hợp nhất với **target** và **CV** của ứng viên, song ngữ Việt–Anh.
+Lấy dữ liệu job qua Search Engine + Web scraping (**không cần API key**). Chạy được trên **3 nền tảng**
+từ cùng một nguồn logic (skills + rubric + schema).
+
+| Nền tảng | Cách dùng | Bắt đầu từ |
+|---|---|---|
+| **Claude Code** | Plugin (`.claude-plugin`) | [Cài đặt](#cài-đặt) bên dưới |
+| **Codex CLI** | Plugin (`.codex-plugin`) | [Cài đặt](#cài-đặt) bên dưới |
+| **ChatGPT** (Custom GPT / Project / chat) | Dán Instructions | [`chatgpt/README.md`](chatgpt/README.md) |
 
 - Plugin (nguồn chân lý duy nhất): [`job-matching-plugin/`](job-matching-plugin/) — chứa cả `.claude-plugin/` và `.codex-plugin/`, dùng chung `skills/`, `schemas/`.
+- Adapter ChatGPT: [`chatgpt/`](chatgpt/) — orchestrator dán-là-chạy, tự sinh bộ Knowledge từ plugin.
 - Marketplace Claude: [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json)
-- Hướng dẫn: [`claude-runtime-notes.md`](job-matching-plugin/docs/claude-runtime-notes.md) (Claude) · [`AGENTS.md`](job-matching-plugin/AGENTS.md) (Codex)
+- Hướng dẫn: [`claude-runtime-notes.md`](job-matching-plugin/docs/claude-runtime-notes.md) (Claude) · [`AGENTS.md`](job-matching-plugin/AGENTS.md) (Codex) · [`chatgpt/GPT-INSTRUCTIONS.md`](chatgpt/GPT-INSTRUCTIONS.md) (ChatGPT)
 
 ## Cài đặt
 
@@ -31,6 +40,17 @@ Ra `dist/job-matching-v<version>.zip`. Giải nén rồi:
 ```
 
 Sau đó chạy full pipeline — Claude: `/find-jobs D:\path\to\CV.pdf` · Codex: gọi skill `find-jobs` với đường dẫn CV.
+
+### Cách 3 — ChatGPT (Custom GPT / Project)
+
+Không cần plugin. Tạo một Custom GPT, bật **Web Search**, dán [`chatgpt/GPT-INSTRUCTIONS.md`](chatgpt/GPT-INSTRUCTIONS.md) vào ô Instructions rồi dán CV là chạy. Muốn tăng độ chính xác thì upload thêm bộ Knowledge:
+
+```bash
+bash build-chatgpt.sh          # macOS/Linux
+powershell -ExecutionPolicy Bypass -File .\build-chatgpt.ps1   # Windows
+```
+
+→ ra `dist/chatgpt-knowledge/` (các skill `*.md` + `*.schema.json`) để kéo-thả vào mục Knowledge. Chi tiết 3 cách (Custom GPT / Project / chat thường): [`chatgpt/README.md`](chatgpt/README.md).
 
 ## Pipeline
 
