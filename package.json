@@ -24,11 +24,19 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/hieutrong512/JobMatching.git"
+    "url": "git+https://github.com/hieutrong512/JobMatching.git"
   },
   "files": [
     "bin/",
-    "job-matching-plugin/",
+    "job-matching-plugin/.claude-plugin/",
+    "job-matching-plugin/.codex-plugin/",
+    "job-matching-plugin/skills/",
+    "job-matching-plugin/schemas/",
+    "job-matching-plugin/agents/",
+    "job-matching-plugin/commands/",
+    "job-matching-plugin/docs/",
+    "job-matching-plugin/AGENTS.md",
+    "job-matching-plugin/README.md",
     "chatgpt/"
   ],
   "engines": {

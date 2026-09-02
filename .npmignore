@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+*.py
+data/
+dist/
+_bmad-output/
+.claude/
+.agents/
+*.zip
+*.pdf
+*.docx
+*.doc
+.env*
+build-*.sh
+build-*.ps1
+CLAUDE.md
+.gitignore
