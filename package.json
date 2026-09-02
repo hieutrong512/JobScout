@@ -1,0 +1,37 @@
+{
+  "name": "job-matching",
+  "version": "1.2.0",
+  "description": "AI job matching — tìm và xếp hạng việc làm phù hợp CV, song ngữ Việt–Anh. Chạy trên Claude Code, Codex CLI và ChatGPT.",
+  "bin": {
+    "job-matching": "bin/cli.mjs"
+  },
+  "type": "module",
+  "keywords": [
+    "job-matching",
+    "cv",
+    "career",
+    "recruitment",
+    "claude",
+    "codex",
+    "chatgpt",
+    "ai-agents",
+    "vietnam"
+  ],
+  "author": {
+    "name": "Nguyen Trong Hieu",
+    "email": "hieutrong512@gmail.com"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hieutrong512/JobMatching.git"
+  },
+  "files": [
+    "bin/",
+    "job-matching-plugin/",
+    "chatgpt/"
+  ],
+  "engines": {
+    "node": ">=18"
+  }
+}
