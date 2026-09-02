@@ -1,76 +1,96 @@
 # JobMatching
 
-Trợ lý tìm và xếp hạng các job phù hợp nhất với **target** và **CV** của ứng viên, song ngữ Việt–Anh.
-Lấy dữ liệu job qua Search Engine + Web scraping (**không cần API key**). Chạy được trên **3 nền tảng**
-từ cùng một nguồn logic (skills + rubric + schema).
+AI tìm và xếp hạng việc làm phù hợp nhất với CV của bạn — song ngữ Việt–Anh, không cần API key.
 
-| Nền tảng | Cách dùng | Bắt đầu từ |
-|---|---|---|
-| **Claude Code** | Plugin (`.claude-plugin`) | [Cài đặt](#cài-đặt) bên dưới |
-| **Codex CLI** | Plugin (`.codex-plugin`) | [Cài đặt](#cài-đặt) bên dưới |
-| **ChatGPT** (Custom GPT / Project / chat) | Dán Instructions | [`chatgpt/README.md`](chatgpt/README.md) |
+Thu thập job thật từ ITviec, TopCV, VietnamWorks, LinkedIn… qua web search, chấm điểm 6 chiều
+(skills · seniority · domain · compensation · location · culture), xuất báo cáo fit/gap chi tiết
+với link apply cho từng job.
 
-- Plugin (nguồn chân lý duy nhất): [`job-matching-plugin/`](job-matching-plugin/) — chứa cả `.claude-plugin/` và `.codex-plugin/`, dùng chung `skills/`, `schemas/`.
-- Adapter ChatGPT: [`chatgpt/`](chatgpt/) — orchestrator dán-là-chạy, tự sinh bộ Knowledge từ plugin.
-- Marketplace Claude: [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json)
-- Hướng dẫn: [`claude-runtime-notes.md`](job-matching-plugin/docs/claude-runtime-notes.md) (Claude) · [`AGENTS.md`](job-matching-plugin/AGENTS.md) (Codex) · [`chatgpt/GPT-INSTRUCTIONS.md`](chatgpt/GPT-INSTRUCTIONS.md) (ChatGPT)
+## Bắt đầu nhanh
 
-## Cài đặt
-
-### Cách 1 — Tải package (.zip)
-
-Build 1 file zip tải-về-là-dùng cho cả hai hệ:
+### Claude Code
 
 ```bash
-powershell -ExecutionPolicy Bypass -File .\build-release.ps1   # Windows
-```
-```bash
-bash build-release.sh                                          # macOS/Linux
-```
-
-Ra `dist/job-matching-v<version>.zip`. Giải nén rồi:
-- **Claude Code**: `/plugin marketplace add <thư-mục-giải-nén>` → `/plugin install job-matching`
-- **Codex**: trỏ plugin tới `<thư-mục-giải-nén>/job-matching-plugin` (đọc `.codex-plugin/plugin.json`). Bật web search: `codex --search` hoặc `tools.web_search = true`.
-
-### Cách 2 — Từ git repo (Claude)
-
-```bash
-/plugin marketplace add <đường-dẫn-hoặc-git-repo-này>
+/plugin marketplace add https://github.com/hieutrong512/JobMatching
 /plugin install job-matching
+/find-jobs path/to/CV.pdf
 ```
 
-Sau đó chạy full pipeline — Claude: `/find-jobs D:\path\to\CV.pdf` · Codex: gọi skill `find-jobs` với đường dẫn CV.
-
-### Cách 3 — ChatGPT (Custom GPT / Project)
-
-Không cần plugin. Tạo một Custom GPT, bật **Web Search**, dán [`chatgpt/GPT-INSTRUCTIONS.md`](chatgpt/GPT-INSTRUCTIONS.md) vào ô Instructions rồi dán CV là chạy. Muốn tăng độ chính xác thì upload thêm bộ Knowledge:
+### Codex CLI
 
 ```bash
-bash build-chatgpt.sh          # macOS/Linux
-powershell -ExecutionPolicy Bypass -File .\build-chatgpt.ps1   # Windows
+# Trỏ plugin tới repo đã clone
+codex --search   # bật web search
+# Gọi skill find-jobs với đường dẫn CV
 ```
 
-→ ra `dist/chatgpt-knowledge/` (các skill `*.md` + `*.schema.json`) để kéo-thả vào mục Knowledge. Chi tiết 3 cách (Custom GPT / Project / chat thường): [`chatgpt/README.md`](chatgpt/README.md).
+### ChatGPT
+
+1. [Tải repo về](https://github.com/hieutrong512/JobMatching/archive/refs/heads/main.zip) và giải nén.
+2. Vào [chatgpt.com/gpts/editor](https://chatgpt.com/gpts/editor) → **Create** → tab **Configure**:
+   - **Name**: `JobMatching`
+   - **Description**: "Tìm & xếp hạng việc làm phù hợp CV, song ngữ Việt–Anh"
+   - **Instructions**: mở file `chatgpt/GPT-INSTRUCTIONS.md` từ thư mục vừa giải nén, copy toàn bộ nội dung dán vào
+   - **Knowledge**: kéo-thả **tất cả** file trong `chatgpt/knowledge/` vào (skills + schemas, tăng độ chính xác)
+   - **Capabilities**: bật **Web Search** (bắt buộc). Bật **Code Interpreter** nếu muốn tải báo cáo về (tùy chọn)
+3. **Save** → **Publish** ("Anyone with a link" để chia sẻ, hoặc "Only me" để dùng riêng)
+4. Mở GPT, dán CV vào là chạy.
+
+> **Nâng cao**: Muốn tự build bộ Knowledge mới nhất từ source:
+> ```bash
+> bash build-chatgpt.sh          # macOS/Linux
+> powershell -File build-chatgpt.ps1   # Windows
+> ```
+> → ra `dist/chatgpt-knowledge/` để upload.
 
 ## Pipeline
 
 ```
 CV + Target
    │
-   ▼
-[1] candidate-intake (skill) ──► data/profiles/<candidate>.json
+   ▼  [1] candidate-intake     Parse CV → profile.json
    │
-   ▼
-[2] job-collector (subagent) ──► data/jobs/<run-id>.json      (Job boards)
+   ▼  [2] job-collector        Web search → tối đa 20 job hợp lệ
    │
-   ▼
-[3] job-matcher (subagent) ───► data/results/<run-id>.shortlist.json
+   ▼  [3] job-matcher          Chấm điểm 6 chiều → shortlist xếp hạng
    │
-   ▼
-[4] fit-analyzer (skill) ─────► data/results/<run-id>.fit_report.md
+   ▼  [4] fit-analyzer         Báo cáo fit/gap + link apply từng job
    │
-   ▼
-[5] application-assistant (skill, optional) ──► CV bullets / cover letter / tin nhắn tiếp cận HR
+   ▼  [5] application-assistant (tùy chọn)  Tailor CV / cover letter / tin nhắn HR
+```
+
+## Trọng số chấm điểm
+
+| Chiều | Mặc định | Ý nghĩa |
+|---|---|---|
+| skills | 35% | Khớp kỹ năng must-have / nice-to-have |
+| seniority | 20% | Cấp bậc & năm kinh nghiệm |
+| domain | 15% | Ngành / lĩnh vực |
+| compensation | 15% | Lương so với kỳ vọng |
+| location | 5% | Địa điểm & remote |
+| culture | 5% | Quy mô / loại hình công ty |
+
+Override trọng số bằng cách khai `priorities` khi được hỏi target (tổng tự chuẩn hóa về 1).
+
+## Cấu trúc repo
+
+```
+├── job-matching-plugin/          ← nguồn chân lý duy nhất
+│   ├── .claude-plugin/           Claude Code manifest
+│   ├── .codex-plugin/            Codex CLI manifest
+│   ├── skills/*/SKILL.md         Logic pipeline + rubric
+│   ├── schemas/*.json            Data contracts (profile / job / match)
+│   ├── agents/*.md               Subagent definitions (Claude)
+│   └── commands/find-jobs.md     Slash command /find-jobs
+│
+├── chatgpt/                      ← adapter ChatGPT
+│   ├── GPT-INSTRUCTIONS.md       Orchestrator dán vào Custom GPT
+│   ├── knowledge/                Skills + schemas flatten sẵn để upload
+│   └── README.md                 Hướng dẫn chi tiết
+│
+├── .claude-plugin/marketplace.json
+├── build-release.sh / .ps1       Đóng gói plugin (.zip)
+└── build-chatgpt.sh / .ps1       Build bộ Knowledge cho ChatGPT
 ```
 
 ## Thành phần
@@ -78,30 +98,28 @@ CV + Target
 | Thành phần | Loại | Vai trò |
 |---|---|---|
 | `candidate-intake` | Skill | Parse CV + hỏi target → `profile.json` |
-| `job-collector` | Subagent | Search + scrape JD từ Job boards → `jobs.json` |
-| `job-matcher` | Subagent | Chấm điểm & rank → `shortlist.json` |
-| `fit-analyzer` | Skill | Giải thích fit + gap → `fit_report.md` |
+| `job-collector` | Subagent | Search + scrape JD từ job boards → `jobs.json` |
+| `job-matcher` | Subagent | Chấm điểm & xếp hạng → `shortlist.json` |
+| `fit-analyzer` | Skill | Báo cáo fit/gap chi tiết → `fit_report.md` |
 | `application-assistant` | Skill | Tailor CV / cover letter / tin nhắn tiếp cận HR |
-| `scoring-rubric` | Skill | Công thức tính điểm khớp (nền tảng) |
-| `job-schema` | Skill | Schema chuẩn cho job (kèm contact) |
+| `scoring-rubric` | Skill | Công thức tính điểm 6 chiều (nền tảng) |
+| `job-schema` | Skill | Schema chuẩn cho job + cách map dữ liệu thô |
 | `bilingual-normalization` | Skill | Chuẩn hóa skill/chức danh/lương Việt–Anh |
 
 ## Data contracts
 
-Mọi thành phần trao đổi qua JSON theo `job-matching-plugin/schemas/`:
-- `profile.schema.json` — hồ sơ ứng viên (CV + target)
-- `job.schema.json` — tin tuyển dụng đã chuẩn hóa (kèm contact info nếu JD có)
-- `match.schema.json` — kết quả chấm điểm từng job
+Mọi thành phần trao đổi qua JSON schema trong `job-matching-plugin/schemas/`:
+- **`profile.schema.json`** — hồ sơ ứng viên (CV + target + priorities)
+- **`job.schema.json`** — tin tuyển dụng đã chuẩn hóa (kèm contact nếu JD có)
+- **`match.schema.json`** — kết quả chấm điểm từng job (6 chiều + rationale)
 
-## Cách dùng (điển hình)
+## Lưu ý
 
-1. Đặt CV vào `data/profiles/` (hoặc dán nội dung), chạy intake để tạo `profile.json`.
-2. Gọi `job-collector` với profile → thu thập job từ Web tuyển dụng.
-3. Gọi `job-matcher` → nhận shortlist đã xếp hạng.
-4. Chạy `fit-analyzer` trên top N để có báo cáo fit/gap.
-5. (Tùy chọn) `application-assistant` để tailor hồ sơ hoặc soạn tin nhắn liên hệ HR.
+- Quét từ các trang tuyển dụng chính thống. Chỉ giữ job xem được full JD và còn hạn.
+- Tôn trọng robots.txt và ToS; không vượt qua anti-bot/CAPTCHA.
+- Không bịa dữ liệu job/CV. Thiếu thông tin → `unknown` + hạ confidence (không chấm 0 mù quáng).
+- **Không tự nộp hồ sơ / gửi tin nhắn thay người dùng.**
 
-## Lưu ý scraping
+## License
 
-- Quét từ các trang tuyển dụng chính thống (ITviec, TopCV, VietnamWorks, LinkedIn...). Chỉ giữ job xem được full JD và còn hạn.
-- Tôn trọng robots.txt và ToS; không vượt qua anti-bot/CAPTCHA; không tự nộp hồ sơ / gửi tin nhắn thay người dùng.
+MIT

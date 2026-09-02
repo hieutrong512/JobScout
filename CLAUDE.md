@@ -7,9 +7,10 @@ và **CV** của ứng viên, song ngữ Việt–Anh. Lấy dữ liệu job qua
 ## Bố cục repo
 
 - `.claude-plugin/marketplace.json` — marketplace, trỏ tới plugin `./job-matching-plugin`.
-- `chatgpt/` — **adapter ChatGPT** (Custom GPT / Project / chat). Chỉ chứa orchestrator
-  `GPT-INSTRUCTIONS.md` + `README.md`; **KHÔNG** copy skill. Bộ Knowledge cho ChatGPT được
-  sinh ra từ plugin bằng `build-chatgpt.sh`/`.ps1` → `dist/chatgpt-knowledge/` (artifact, gitignore).
+- `chatgpt/` — **adapter ChatGPT** (Custom GPT / Project / chat). Chứa orchestrator
+  `GPT-INSTRUCTIONS.md`, `README.md`, và `knowledge/` (bản flatten của skills + schemas để
+  user tải zip về upload luôn). Khi sửa skill trong plugin, chạy `build-chatgpt.sh`/`.ps1`
+  rồi copy `dist/chatgpt-knowledge/` đè vào `chatgpt/knowledge/` trước khi commit.
 - `job-matching-plugin/` — **nguồn chân lý duy nhất** của plugin:
   - `.claude-plugin/plugin.json` — manifest plugin.
   - `commands/find-jobs.md` — slash command `/find-jobs` điều phối full pipeline.

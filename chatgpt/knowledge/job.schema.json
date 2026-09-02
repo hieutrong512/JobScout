@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "job.schema.json",
+  "title": "Job",
+  "description": "Tin tuyển dụng đã chuẩn hóa từ nguồn search/scrape.",
+  "type": "object",
+  "required": ["id", "title", "company", "url", "source"],
+  "properties": {
+    "schema_version": { "type": "string", "default": "1.0" },
+    "id": { "type": "string", "description": "Hash ổn định từ url hoặc company+title+location để khử trùng" },
+    "title": { "type": "string" },
+    "company": { "type": "string" },
+    "location": { "type": "string" },
+    "remote": { "type": "string", "enum": ["onsite", "hybrid", "remote", "unknown"], "default": "unknown" },
+    "url": { "type": "string", "description": "Link trang tuyển dụng / link JD gốc" },
+    "source": { "type": "string", "description": "vd 'itviec', 'topcv', 'vietnamworks', 'linkedin', 'careerviet', 'google'" },
+    "posted_date": { "type": "string", "description": "YYYY-MM-DD nếu có" },
+    "application_deadline": { "type": "string", "description": "YYYY-MM-DD hạn nộp nếu JD có ghi; job chỉ được giữ khi hạn >= ngày hiện tại" },
+    "employment_type": { "type": "string", "enum": ["full-time", "part-time", "contract", "internship", "unknown"], "default": "unknown" },
+    "language": { "type": "string", "enum": ["vi", "en", "mixed"], "default": "mixed" },
+    "description": { "type": "string", "description": "JD gốc (rút gọn nếu quá dài)" },
+    "contact": {
+      "type": "object",
+      "description": "Thông tin liên hệ ứng tuyển trực tiếp nếu JD có",
+      "properties": {
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "zalo": { "type": "string" },
+        "form_url": { "type": "string", "description": "Google Form / Typeform link nếu có" },
+        "how_to_apply": { "type": "string", "description": "Hướng dẫn ứng tuyển ngắn: vd 'Gửi CV qua email', 'Apply qua link'" }
+      }
+    },
+    "requirements": {
+      "type": "object",
+      "properties": {
+        "must_have_skills": { "type": "array", "items": { "type": "string" }, "description": "Canonical names" },
+        "nice_to_have_skills": { "type": "array", "items": { "type": "string" } },
+        "min_years": { "type": "number" },
+        "seniority": { "type": "string", "enum": ["intern", "junior", "mid", "senior", "lead", "manager", "director", "unknown"], "default": "unknown" },
+        "education": { "type": "string" }
+      }
+    },
+    "salary": {
+      "type": "object",
+      "properties": {
+        "min": { "type": "number" },
+        "max": { "type": "number" },
+        "currency": { "type": "string", "enum": ["VND", "USD", "unknown"], "default": "unknown" },
+        "period": { "type": "string", "enum": ["month", "year", "unknown"], "default": "unknown" },
+        "negotiable": { "type": "boolean" }
+      }
+    },
+    "industry": { "type": "string" },
+    "company_size": { "type": "string", "enum": ["startup", "sme", "enterprise", "unknown"], "default": "unknown" },
+    "collected_at": { "type": "string", "description": "ISO timestamp lúc thu thập" },
+    "extraction_confidence": { "type": "number", "description": "0-1, độ tin cậy khi parse JD (0.8-1.0 khi đọc được full JD)" }
+  }
+}
