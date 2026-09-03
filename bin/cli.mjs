@@ -9,7 +9,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const PKG_ROOT = resolve(__dirname, "..");
 const PLUGIN_SRC = join(PKG_ROOT, "job-matching-plugin");
 const CWD = process.cwd();
-const REPO_URL = "https://github.com/hieutrong512/JobMatching";
+const REPO_URL = "https://github.com/hieutrong512/JobScout";
 
 const RESET = "\x1b[0m";
 const GREEN = "\x1b[32m";

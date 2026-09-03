@@ -1,6 +1,6 @@
 {
   "name": "jobscout",
-  "version": "1.5.1",
+  "version": "1.5.3",
   "description": "AI job matching — tìm và xếp hạng việc làm phù hợp CV, song ngữ Việt–Anh. Chạy trên Claude Code và Codex CLI.",
   "bin": {
     "jobscout": "bin/cli.mjs"
@@ -22,9 +22,10 @@
     "email": "hieutrong512@gmail.com"
   },
   "license": "MIT",
+  "homepage": "https://github.com/hieutrong512/JobScout",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/hieutrong512/JobMatching.git"
+    "url": "git+https://github.com/hieutrong512/JobScout.git"
   },
   "files": [
     "bin/",
