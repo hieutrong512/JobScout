@@ -20,9 +20,9 @@ Dùng `<run-id>` duy nhất theo mẫu `<candidate-slug>-<YYYYMMDD-HHMMSS>-<suff
 ## Bước 2 — Collector (2 pha: search song song → chọn toàn cục → fetch song song)
 Mục tiêu: **chỉ tốn tối đa `fetch_count` (≤20) lần fetch** nhưng ngân sách fetch được dồn cho các URL **tốt nhất trên toàn bộ nền tảng**, không chia đều — để không bỏ sót nền tảng giàu job.
 
-**Pha 2a — Search (rẻ, song song).** Với mỗi nền tảng trong `platforms` (đã chốt ở Bước 1), **spawn một `job-collector` `mode=search` song song trong CÙNG một message**. Mỗi cái chỉ `WebSearch` (không fetch), ghi ứng viên ra `data/jobs/<run-id>.<platform-slug>.candidates.json` (`{url, title, snippet, platform, relevance, fresh_hint}`).
+**Pha 2a — Search (rẻ, song song).** Với mỗi nền tảng trong `platforms` (đã chốt ở Bước 1), **spawn một `job-collector` `mode=search` song song trong CÙNG một message**, truyền `fetch_count`. Mỗi cái chỉ `WebSearch` (không fetch) và **lọc gọn ngay tại nguồn**: bỏ tin đăng **≥ 1 tháng**, bỏ link không phải JD / hết hạn / relevance thấp, cap top-`fetch_count` theo relevance, rồi ghi bản **gọn (KHÔNG snippet)** ra `data/jobs/<run-id>.<platform-slug>.candidates.json` (`{url, title, platform, relevance, posted_days}`).
 
-**Pha 2b — Chọn toàn cục (điều phối viên, không spawn).** Đọc tất cả file `*.candidates.json`, gộp, khử trùng theo URL chuẩn hóa, **xếp hạng toàn cục theo `relevance` + tin mới/còn hạn** — KHÔNG giới hạn theo nền tảng. Chọn **top `fetch_count` URL** làm danh sách fetch (một nền tảng giàu job có thể chiếm phần lớn slot). Lấy dư một ít (buffer ~30%, nhưng tổng ≤ 20 + buffer) để bù URL hỏng/hết hạn.
+**Pha 2b — Chọn toàn cục (điều phối viên, không spawn).** Đọc tất cả file `*.candidates.json` (chỉ là các dòng gọn, nhẹ token), gộp, khử trùng theo URL chuẩn hóa, **xếp hạng toàn cục theo `relevance` + `posted_days` (tin mới ưu tiên)** — KHÔNG giới hạn theo nền tảng. Chọn **top `fetch_count` URL** làm danh sách fetch (một nền tảng giàu job có thể chiếm phần lớn slot). Lấy dư một ít (buffer ~30%, nhưng tổng ≤ 20 + buffer) để bù URL hỏng/hết hạn.
 
 **Pha 2c — Fetch (song song).** Nhóm danh sách URL đã chọn **theo nền tảng**; với mỗi nhóm không rỗng, **spawn một `job-collector` `mode=fetch` song song**, truyền `urls` của nhóm đó, ghi `data/jobs/<run-id>.<platform-slug>.json`. Mỗi cái chỉ fetch đúng URL được giao.
 
