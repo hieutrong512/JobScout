@@ -1,7 +1,7 @@
 {
   "name": "jobscout",
-  "version": "1.2.0",
-  "description": "AI job matching — tìm và xếp hạng việc làm phù hợp CV, song ngữ Việt–Anh. Chạy trên Claude Code, Codex CLI và ChatGPT.",
+  "version": "1.5.1",
+  "description": "AI job matching — tìm và xếp hạng việc làm phù hợp CV, song ngữ Việt–Anh. Chạy trên Claude Code và Codex CLI.",
   "bin": {
     "jobscout": "bin/cli.mjs"
   },
@@ -14,7 +14,6 @@
     "recruitment",
     "claude",
     "codex",
-    "chatgpt",
     "ai-agents",
     "vietnam"
   ],
@@ -37,8 +36,7 @@
     "job-matching-plugin/commands/",
     "job-matching-plugin/docs/",
     "job-matching-plugin/AGENTS.md",
-    "job-matching-plugin/README.md",
-    "chatgpt/"
+    "job-matching-plugin/README.md"
   ],
   "engines": {
     "node": ">=18"

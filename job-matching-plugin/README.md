@@ -11,7 +11,7 @@ Thêm marketplace rồi cài plugin (trong phiên `claude` tương tác):
 ```
 
 ```bash
-/plugin install job-matching
+/plugin install jobscout
 ```
 
 > Marketplace nằm ở `.claude-plugin/marketplace.json` tại gốc repo; plugin nằm trong `job-matching-plugin/`.

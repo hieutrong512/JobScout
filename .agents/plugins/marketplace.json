@@ -1,9 +1,9 @@
 {
-  "name": "jobmatching-local",
-  "interface": {"displayName": "JobMatching Local"},
+  "name": "jobscout-local",
+  "interface": {"displayName": "JobScout Local"},
   "plugins": [
     {
-      "name": "job-matching",
+      "name": "jobscout",
       "source": {"source": "local", "path": "./job-matching-plugin"},
       "policy": {"installation": "AVAILABLE", "authentication": "ON_INSTALL"},
       "category": "Productivity"

@@ -6,7 +6,7 @@ Thu thập job thật từ ITviec, TopCV, VietnamWorks, LinkedIn… qua web sear
 (skills · seniority · domain · compensation · location · culture), xuất báo cáo fit/gap chi tiết
 với link apply cho từng job.
 
-**Chạy được trên Claude Code, Codex CLI và ChatGPT** — cùng một logic, một lệnh cài đặt.
+**Chạy được trên Claude Code và Codex CLI** — cùng một logic, một lệnh cài đặt.
 
 ## Cài đặt
 
@@ -14,12 +14,12 @@ với link apply cho từng job.
 npx jobscout setup
 ```
 
-Tự phát hiện nền tảng và setup. Hoặc chỉ định:
+Hiện menu chọn nền tảng (Claude Code / Codex / All) ngay trên terminal — dùng ↑/↓ di chuyển,
+`space` chọn, `enter` xác nhận. Cài xong sẽ hiển thị hướng dẫn bước tiếp theo. Hoặc chỉ định thẳng:
 
 ```bash
 npx jobscout setup claude    # Claude Code
 npx jobscout setup codex     # Codex CLI
-npx jobscout setup chatgpt   # ChatGPT (Custom GPT)
 npx jobscout setup all       # Tất cả
 ```
 
@@ -29,7 +29,7 @@ npx jobscout setup all       # Tất cả
 
 ```
 /plugin marketplace add .
-/plugin install job-matching
+/plugin install jobscout
 /find-jobs path/to/CV.pdf
 ```
 
@@ -39,16 +39,6 @@ npx jobscout setup all       # Tất cả
 codex --search
 # Gọi skill find-jobs với đường dẫn CV
 ```
-
-### ChatGPT
-
-CLI tạo thư mục `job-matching-chatgpt/` chứa sẵn mọi thứ:
-
-1. Vào [chatgpt.com/gpts/editor](https://chatgpt.com/gpts/editor) → **Create**
-2. **Instructions**: dán nội dung `job-matching-chatgpt/GPT-INSTRUCTIONS.md`
-3. **Knowledge**: kéo-thả tất cả file trong `job-matching-chatgpt/knowledge/`
-4. Bật **Web Search** → Save → Publish
-5. Mở GPT, dán CV là chạy
 
 ## Pipeline
 
@@ -97,7 +87,7 @@ JSON schema trong `job-matching-plugin/schemas/`:
 ## Cấu trúc repo
 
 ```
-├── bin/cli.mjs                   ← CLI (npx job-matching setup)
+├── bin/cli.mjs                   ← CLI (npx jobscout setup)
 ├── job-matching-plugin/          ← nguồn chân lý duy nhất
 │   ├── .claude-plugin/             Claude Code manifest
 │   ├── .codex-plugin/              Codex CLI manifest
@@ -105,9 +95,6 @@ JSON schema trong `job-matching-plugin/schemas/`:
 │   ├── schemas/*.json              Data contracts
 │   ├── agents/*.md                 Subagent definitions
 │   └── commands/find-jobs.md       Slash command /find-jobs
-├── chatgpt/                      ← adapter ChatGPT
-│   ├── GPT-INSTRUCTIONS.md         Orchestrator cho Custom GPT
-│   └── knowledge/                   Skills + schemas flatten sẵn
 └── package.json
 ```
 

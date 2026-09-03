@@ -17,7 +17,7 @@ class PluginIntegrityTests(unittest.TestCase):
         manifest_path = PLUGIN_ROOT / ".claude-plugin" / "plugin.json"
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
 
-        self.assertEqual(manifest["name"], "job-matching")
+        self.assertEqual(manifest["name"], "jobscout")
         self.assertTrue(manifest["version"])
         self.assertTrue(manifest["description"])
         self.assertTrue(manifest["author"]["name"])
@@ -112,7 +112,7 @@ class PluginIntegrityTests(unittest.TestCase):
         self.assertTrue(manifest_path.is_file(), "Thiếu manifest Codex")
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
 
-        self.assertEqual(manifest["name"], "job-matching")
+        self.assertEqual(manifest["name"], "jobscout")
         self.assertEqual(manifest["version"], "1.2.0")
         self.assertEqual(manifest.get("skills"), "./skills/")
         self.assertNotIn("mcpServers", manifest)
@@ -133,7 +133,7 @@ class PluginIntegrityTests(unittest.TestCase):
     def test_repo_codex_marketplace_is_valid(self):
         path = PLUGIN_ROOT.parent / ".agents" / "plugins" / "marketplace.json"
         marketplace = json.loads(path.read_text(encoding="utf-8"))
-        entry = next(item for item in marketplace["plugins"] if item["name"] == "job-matching")
+        entry = next(item for item in marketplace["plugins"] if item["name"] == "jobscout")
         self.assertEqual(entry["source"]["path"], "./job-matching-plugin")
         self.assertIn("policy", entry)
         self.assertTrue(entry["category"])
