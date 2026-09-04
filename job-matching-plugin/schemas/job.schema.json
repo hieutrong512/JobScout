@@ -18,7 +18,7 @@
     "application_deadline": { "type": "string", "description": "YYYY-MM-DD hạn nộp nếu JD có ghi; job chỉ được giữ khi hạn >= ngày hiện tại" },
     "employment_type": { "type": "string", "enum": ["full-time", "part-time", "contract", "internship", "unknown"], "default": "unknown" },
     "language": { "type": "string", "enum": ["vi", "en", "mixed"], "default": "mixed" },
-    "description": { "type": "string", "description": "JD gốc (rút gọn nếu quá dài)" },
+    "description": { "type": "string", "maxLength": 400, "description": "Tóm tắt ngắn (≤ 60 từ) phần trách nhiệm/yêu cầu chính CHƯA nằm trong structured fields. KHÔNG chép nguyên văn JD — giữ token thấp cho matcher/report." },
     "contact": {
       "type": "object",
       "description": "Thông tin liên hệ ứng tuyển trực tiếp nếu JD có",

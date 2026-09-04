@@ -35,7 +35,7 @@ Schema chính: `./schemas/job.schema.json`. Skill này hướng dẫn cách đi�
 
 - Chỉ điền trường khi có bằng chứng trong dữ liệu nguồn. Không suy đoán lương/quy mô công ty nếu JD không nói → để `unknown`.
 - `url` luôn là link trang tuyển dụng gốc để người dùng bấm vào apply.
-- Rút gọn `description` nếu quá dài (giữ phần requirements + trách nhiệm chính).
+- `description` là **tóm tắt ngắn ≤ 60 từ** (cap cứng), chỉ nêu trách nhiệm/yêu cầu chính **chưa** nằm trong structured fields (`requirements`, `salary`, `remote`...). **KHÔNG chép nguyên văn JD** — nguyên văn sẽ trôi xuống matcher/report và bị đọc lại nhiều lần, tốn token. Ưu tiên để trống nếu structured fields đã đủ để chấm điểm.
 
 ## Ví dụ tin tuyển dụng chuẩn (Full JD)
 
