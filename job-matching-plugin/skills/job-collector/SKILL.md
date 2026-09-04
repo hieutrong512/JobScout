@@ -9,7 +9,12 @@ Nhận đường dẫn `profile.json`, `run_id` duy nhất và đường dẫn o
 
 ## Nguồn dữ liệu
 
-- Job boards: dùng web search/fetch sẵn có của host. Chỉ giữ job đọc được JD và chưa có bằng chứng hết hạn.
+- **Tier 1 — script crawler (thử trước):** `crawlers/run.py` (Python stdlib, không cần cài gì) bóc job
+  ngoài context để tiết kiệm token. Board có adapter (vd `itviec.com`) → JSON đúng `job.schema`;
+  board chưa hỗ trợ trả `no_adapter` (exit 3) → fallback web search/fetch. Hợp đồng: `crawlers/README.md`.
+  - search: `python crawlers/run.py --platform <domain> --mode search --query "<song ngữ>" --max <N> --today <run-id>`
+  - fetch: `python crawlers/run.py --platform <domain> --mode fetch --urls-file <urls.json|-> --out data/jobs/<run_id>.<platform>.json --today <run-id>`
+- **Tier 2 — web search/fetch** của host cho board chưa có adapter. Chỉ giữ job đọc được JD và chưa có bằng chứng hết hạn.
 
 ## Contract
 

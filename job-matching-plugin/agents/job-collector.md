@@ -1,7 +1,7 @@
 ---
 name: job-collector
 description: Thu thập tin tuyển dụng từ MỘT nền tảng (job board). Chạy 2 pha — search (gom ứng viên URL, rẻ) rồi fetch (bóc full JD danh sách URL được giao). Điều phối viên spawn nhiều collector song song, mỗi nền tảng một cái.
-tools: WebSearch, WebFetch, Read, Write, Glob
+tools: Bash, WebSearch, WebFetch, Read, Write, Glob
 model: sonnet
 ---
 
@@ -22,10 +22,25 @@ Mỗi lần chạy, collector này chỉ phụ trách **một nền tảng** và
 
 ---
 
+## Tier 1 — script crawler (THỬ TRƯỚC ở cả hai chế độ)
+Có script Python zero-dependency (chỉ stdlib) bóc job **ngoài context** để tiết kiệm token:
+`${CLAUDE_PLUGIN_ROOT}/crawlers/run.py`. Board có adapter (vd `itviec.com`) trả JSON gọn đúng
+`job-schema`; board CHƯA có adapter trả `{"error":"no_adapter"}` **(exit 3)** → khi đó **fallback**
+xuống `WebSearch`/`WebFetch` mô tả bên dưới. Hợp đồng CLI đầy đủ: `crawlers/README.md`.
+
+**Luôn thử crawler cho `platform` được giao trước.** Chỉ dùng đường `WebSearch`/`WebFetch` khi
+crawler trả `no_adapter` (exit 3) hoặc lỗi mạng (exit 4). Truyền `--today <run-id date>` để ổn định.
+Nếu crawler chạy được thì **không** đọc lại HTML — output của nó đã đúng schema, dùng luôn.
+
 ## Chế độ `search` — gom ứng viên (KHÔNG fetch)
 Mục tiêu: trả về danh sách **đã lọc gọn** của nền tảng này (không phải toàn bộ) để điều phối viên
 xếp hạng rẻ. **Không** `WebFetch` ở chế độ này. Snippet chỉ dùng để tính relevance/ước tuổi tin
 **trong context của collector** rồi bỏ đi — **KHÔNG ghi snippet vào file** (tiết kiệm token).
+
+**0. Thử crawler trước:** `Bash`:
+`python "${CLAUDE_PLUGIN_ROOT}/crawlers/run.py" --platform <platform> --mode search --query "<query song ngữ>" --max <fetch_count> --today <run-id date>`.
+Nếu exit 0 → lấy mảng `candidates` trong JSON trả về, ghi thẳng ra `out_path` (đã đúng khuôn
+`{url,title,platform,relevance,posted_days}`), xong. Nếu `no_adapter`/lỗi → làm tiếp bằng WebSearch:
 
 1. Từ `target.desired_roles`, `desired_level`, `locations`, top skills → tạo vài biến thể query **song ngữ**, tất cả `site:<platform>`.
 2. `WebSearch` từng query, gom URL + snippet + tiêu đề. Khử trùng theo URL chuẩn hóa.
@@ -40,6 +55,12 @@ xếp hạng rẻ. **Không** `WebFetch` ở chế độ này. Snippet chỉ dù
 
 ## Chế độ `fetch` — bóc & distill JD cho danh sách URL được giao
 Chỉ fetch đúng các URL trong `urls` (đã được chọn toàn cục theo chất lượng), không tự tìm thêm.
+
+**0. Thử crawler trước:** ghi `urls` ra file JSON tạm (hoặc pipe qua stdin) rồi `Bash`:
+`python "${CLAUDE_PLUGIN_ROOT}/crawlers/run.py" --platform <platform> --mode fetch --urls-file <urls.json|-> --out <out_path> --today <run-id date>`.
+Nếu exit 0 → crawler đã ghi mảng job đúng `job-schema` vào `out_path` và tự loại job hết hạn/cũ/hỏng
+(xem `dropped`). **Không đọc lại HTML.** Trả về `fetched` + `dropped` cho điều phối viên. Nếu
+`no_adapter`/lỗi → fetch các URL đó bằng `WebFetch` theo các bước dưới.
 
 **Nguyên tắc token (quan trọng):** `WebFetch` chạy một model nội bộ xử lý trang **trước khi** trả về —
 cái gì trả về sẽ chảy xuống matcher/report và bị đọc lại nhiều lần. Vì vậy **không lấy full JD**.
