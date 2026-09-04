@@ -22,11 +22,19 @@ Mục tiêu: **chỉ tốn tối đa `fetch_count` (≤20) lần fetch** nhưng 
 
 **Pha 2a — Search (rẻ, song song).** Với mỗi nền tảng trong `platforms` (đã chốt ở Bước 1), **spawn một `job-collector` `mode=search` song song trong CÙNG một message**, truyền `fetch_count`. Mỗi cái chỉ `WebSearch` (không fetch) và **lọc gọn ngay tại nguồn**: bỏ tin đăng **≥ 1 tháng**, bỏ link không phải JD / hết hạn / relevance thấp, cap top-`fetch_count` theo relevance, rồi ghi bản **gọn (KHÔNG snippet)** ra `data/jobs/<run-id>.<platform-slug>.candidates.json` (`{url, title, platform, relevance, posted_days}`).
 
-**Pha 2b — Chọn toàn cục (điều phối viên, không spawn).** Đọc tất cả file `*.candidates.json` (chỉ là các dòng gọn, nhẹ token), gộp, khử trùng theo URL chuẩn hóa, **xếp hạng toàn cục theo `relevance` + `posted_days` (tin mới ưu tiên)** — KHÔNG giới hạn theo nền tảng. Chọn **top `fetch_count` URL** làm danh sách fetch (một nền tảng giàu job có thể chiếm phần lớn slot). Lấy dư một ít (buffer ~30%, nhưng tổng ≤ 20 + buffer) để bù URL hỏng/hết hạn.
+**Pha 2b — Chọn toàn cục + kiểm tra cache (điều phối viên, không spawn).**
+1. Đọc tất cả file `*.candidates.json` (gọn, nhẹ token), gộp, khử trùng theo URL chuẩn hóa.
+2. Xếp hạng toàn cục theo `relevance` + `posted_days` (tin mới ưu tiên) — KHÔNG giới hạn theo nền tảng. Chọn **top `fetch_count` URL + buffer ~30%** (tổng ≤ 20 + buffer) để bù URL hỏng/hết hạn.
+3. **Kiểm tra cache:** Glob `data/jobs/*.json` (các run trước, loại file `*.candidates.json` và file gộp run hiện tại). Với mỗi URL trong danh sách đã chọn, chuẩn hóa URL rồi tra trong tất cả job đã có (`url` hoặc `id`). Nếu tìm thấy **và** `posted_date` của job cached cho thấy tin **còn trong vòng 30 ngày** → đánh dấu `cached = true`, dùng lại bản đó (không fetch lại). URL còn lại (`cached = false`) → đưa vào danh sách fetch thật.
+4. **Thông báo ngắn** cho người dùng: "Tìm thấy X job từ cache (skip fetch), sẽ fetch Y URL mới."
 
-**Pha 2c — Fetch (song song).** Nhóm danh sách URL đã chọn **theo nền tảng**; với mỗi nhóm không rỗng, **spawn một `job-collector` `mode=fetch` song song**, truyền `urls` của nhóm đó, ghi `data/jobs/<run-id>.<platform-slug>.json`. Mỗi cái chỉ fetch đúng URL được giao.
+**Pha 2c — Fetch (song song, chỉ URL chưa có cache).** Lấy danh sách URL `cached = false` từ pha 2b. Nhóm theo nền tảng; với mỗi nhóm không rỗng, **spawn một `job-collector` `mode=fetch` song song**, truyền `urls` của nhóm đó, ghi `data/jobs/<run-id>.<platform-slug>.json`. Nếu tất cả URL đều có cache → bỏ qua pha này hoàn toàn.
 
-**Pha 2d — Gộp pool.** Đọc mọi file `data/jobs/<run-id>.<platform-slug>.json`, gộp, **khử trùng theo `id`/URL**, ghi `data/jobs/<run-id>.json`. Nếu sau khi bỏ job hỏng/hết hạn mà còn thiếu nhiều so với `fetch_count`, chọn thêm URL từ danh sách dự phòng (pha 2b) và fetch bù trước khi sang Bước 3. Xếp hạng/chọn 20 cuối cùng do Bước 3 (matcher) lo.
+**Pha 2d — Gộp pool.** Gộp hai nguồn:
+- Job fetch mới: đọc mọi `data/jobs/<run-id>.<platform-slug>.json`.
+- Job từ cache: lấy trực tiếp từ object đã load ở pha 2b (không đọc lại file).
+
+Khử trùng toàn bộ theo `id`/URL, ghi `data/jobs/<run-id>.json`. Nếu sau khi bỏ job hỏng/hết hạn mà còn thiếu nhiều so với `fetch_count`, chọn thêm URL từ danh sách dự phòng (pha 2b, ưu tiên URL chưa có cache) và fetch bù trước khi sang Bước 3. Xếp hạng/chọn 20 cuối cùng do Bước 3 (matcher) lo.
 - Chuẩn thu thập không đổi: chỉ giữ job xem được full JD & còn hạn.
 
 ## Bước 3 — Matcher (subagent `job-matcher`)

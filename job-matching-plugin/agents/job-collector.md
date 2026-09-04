@@ -38,17 +38,41 @@ xếp hạng rẻ. **Không** `WebFetch` ở chế độ này. Snippet chỉ dù
 6. Ghi mảng ứng viên **gọn** vào `out_path` (`data/jobs/<run-id>.<platform-slug>.candidates.json`), mỗi item chỉ gồm:
    `{ url, title, platform, relevance, posted_days }` (KHÔNG có snippet). Trả về số ứng viên giữ lại + số bị loại vì quá cũ.
 
-## Chế độ `fetch` — bóc full JD cho danh sách URL được giao
+## Chế độ `fetch` — bóc & distill JD cho danh sách URL được giao
 Chỉ fetch đúng các URL trong `urls` (đã được chọn toàn cục theo chất lượng), không tự tìm thêm.
 
-1. `WebFetch` từng URL để lấy **full JD**. Tôn trọng robots.txt/ToS. **Không** vượt anti-bot/CAPTCHA.
-2. Chỉ giữ job xem được nội dung đầy đủ (`extraction_confidence ≥ 0.5`) và **còn hạn ứng tuyển**
-   (bỏ nếu 404/410, "đã hết hạn / expired", deadline đã qua). Nếu JD ghi ngày đăng **≥ 1 tháng** → cũng loại.
-3. Bóc liên hệ nếu JD có → trường `contact` (email, phone, how_to_apply).
-4. Chuẩn hóa: áp skill `job-schema` để map schema; áp `bilingual-normalization` cho skills/location/lương;
-   tạo `id` hash ổn định; set `extraction_confidence` trung thực (full JD: 0.8-1.0);
-   thêm `source_platform = <platform>`.
-5. Ghi mảng job hợp lệ vào `out_path` (`data/jobs/<run-id>.<platform-slug>.json`).
+**Nguyên tắc token (quan trọng):** `WebFetch` chạy một model nội bộ xử lý trang **trước khi** trả về —
+cái gì trả về sẽ chảy xuống matcher/report và bị đọc lại nhiều lần. Vì vậy **không lấy full JD**.
+Đưa cho `WebFetch` một prompt **trích-xuất-theo-schema**, buộc nó trả **JSON gọn** đúng các trường bên dưới,
+**không chép nguyên văn JD**. Trang HTML thô nhờ vậy chỉ được đọc một lần ở bước xử lý rẻ của WebFetch và
+không bao giờ vào context của collector.
+
+1. `WebFetch` từng URL với prompt trích xuất (song ngữ Việt–Anh), yêu cầu **CHỈ trả JSON** đúng khuôn:
+   ```
+   Trích tin tuyển dụng này thành JSON, KHÔNG chép nguyên văn JD, KHÔNG kèm giải thích ngoài JSON:
+   { "expired": <true nếu trang 404/410, "đã hết hạn/expired", hoặc deadline đã qua; ngược lại false>,
+     "title","company","location",
+     "remote": onsite|hybrid|remote|unknown,
+     "posted_date":"YYYY-MM-DD|unknown", "application_deadline":"YYYY-MM-DD|unknown",
+     "employment_type","language": vi|en|mixed,
+     "requirements": { "must_have_skills":[...], "nice_to_have_skills":[...], "min_years":<num|null>,
+                       "seniority": intern|junior|mid|senior|lead|manager|director|unknown, "education" },
+     "salary": { "min","max","currency": VND|USD|unknown, "period": month|year|unknown, "negotiable" },
+     "industry","company_size": startup|sme|enterprise|unknown,
+     "contact": { "email","phone","zalo","form_url","how_to_apply" },
+     "summary": "≤ 50 từ: chỉ trách nhiệm/yêu cầu chính CHƯA nằm trong các field trên",
+     "full_jd_visible": <true nếu đọc được toàn bộ JD, false nếu chỉ thấy một phần> }
+   Trường không có bằng chứng trong trang → "unknown"/null/[]. KHÔNG bịa.
+   ```
+   Tôn trọng robots.txt/ToS. **Không** vượt anti-bot/CAPTCHA.
+2. Bỏ ngay nếu `expired = true` hoặc trang không phải JD. Chỉ giữ job đọc được nội dung đầy đủ
+   (`full_jd_visible = true`) và **còn hạn**. Nếu `posted_date` cho thấy tin **≥ 1 tháng** → cũng loại.
+3. Chuẩn hóa bản JSON đã trả (KHÔNG cần đọc lại trang): áp `bilingual-normalization` cho skills/location/lương;
+   map `summary` → `description` (giữ nguyên, **cap cứng ≤ 60 từ**; đừng phình lại thành JD); áp `job-schema`
+   để hoàn thiện; tạo `id` hash ổn định; set `extraction_confidence` trung thực (đọc đủ JD: 0.8–1.0);
+   thêm `source = <platform-slug>`, `collected_at`.
+4. Ghi mảng job hợp lệ vào `out_path` (`data/jobs/<run-id>.<platform-slug>.json`).
+   **Không ghi nguyên văn JD** vào bất kỳ trường nào — chỉ structured fields + `description` ngắn.
    Trả về: số job lấy được, số bị bỏ (chặn/lỗi/hết hạn) kèm URL để điều phối viên có thể bù.
 
 ---
